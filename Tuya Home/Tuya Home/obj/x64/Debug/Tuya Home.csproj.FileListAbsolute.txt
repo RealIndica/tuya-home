@@ -1,0 +1,13 @@
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\bin\x64\Debug\Tuya Home.exe.config
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\bin\x64\Debug\Tuya Home.exe
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\bin\x64\Debug\Tuya Home.pdb
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\obj\x64\Debug\Tuya_Home.Connect.resources
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\obj\x64\Debug\Tuya_Home.Properties.Resources.resources
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.csproj.GenerateResource.cache
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.csproj.CoreCompileInputs.cache
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.exe
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.pdb
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\bin\x64\Debug\Newtonsoft.Json.dll
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\bin\x64\Debug\Newtonsoft.Json.xml
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.csproj.CopyComplete
+C:\Users\Leon\source\repos\Tuya Home\Tuya Home\obj\x64\Debug\Tuya_Home.Main.resources
