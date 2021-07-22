@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using System.IO;
+using System.Net;
+using System.Web;
+using System.Net.Http;
+using Nito.AsyncEx;
+using System.Security.Cryptography;
 
 namespace Tuya_Home
 {
@@ -64,6 +69,16 @@ namespace Tuya_Home
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
             p.WaitForExit();
+        }
+
+        public static string getDeviceMac(string deviceKey)
+        {
+            string cmd = "mac --api-key " + ConfigStore.apiKey + " --api-secret " + ConfigStore.apiSecret + " --virtual-key " + deviceKey;
+            Command com = new Command();
+            com.command = cmd;
+            com.run();
+            dynamic json = JsonConvert.DeserializeObject(com.getOutput());
+            return json[0].mac.ToString();
         }
 
         public static string getDevicesJson(string apiKey, string apiSecret, string virtualDeviceKey)

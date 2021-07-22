@@ -13,6 +13,7 @@ const mock = require('./lib/mock');
 const control = require('./lib/control');
 const wizard = require('./lib/wizard');
 const quickwizard = require('./lib/quickwizard');
+const mac = require('./lib/mac');
 const pkg = require('./package.json');
 
 // Set up config store
@@ -121,11 +122,20 @@ program
 	
 program
 	.command('quickwizard')
-	.description('list devices from an offical app')
+	.description('quickly get devices')
 	.option('--api-key [apiKey]', 'your tuya.com API key')
 	.option('--api-secret [apiSecret]', 'your tuya.com API secret')
 	.option('--virtual-key [virtualKey]', 'random virtual key from one of your devices')
 	.action(options => quickwizard(conf, options));
+	
+program
+	.command('mac')
+	.description('get mac address from virtualkey')
+	.option('--api-key [apiKey]', 'your tuya.com API key')
+	.option('--api-secret [apiSecret]', 'your tuya.com API secret')
+	.option('--virtual-key [virtualKey]', 'random virtual key from one of your devices')
+	.action(options => mac(conf, options));
+
 
 // Get help
 program

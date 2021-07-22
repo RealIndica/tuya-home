@@ -11,3 +11,35 @@ C:\Users\Leon\source\repos\Tuya Home\Tuya Home\bin\x64\Debug\Newtonsoft.Json.dll
 C:\Users\Leon\source\repos\Tuya Home\Tuya Home\bin\x64\Debug\Newtonsoft.Json.xml
 C:\Users\Leon\source\repos\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.csproj.CopyComplete
 C:\Users\Leon\source\repos\Tuya Home\Tuya Home\obj\x64\Debug\Tuya_Home.Main.resources
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.csprojAssemblyReference.cache
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\obj\x64\Debug\Tuya_Home.Connect.resources
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\obj\x64\Debug\Tuya_Home.Main.resources
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\obj\x64\Debug\Tuya_Home.Properties.Resources.resources
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.csproj.GenerateResource.cache
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.csproj.CoreCompileInputs.cache
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.exe
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.pdb
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Tuya Home.exe.config
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Tuya Home.exe
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Tuya Home.pdb
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Newtonsoft.Json.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.AsyncEx.Context.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.AsyncEx.Coordination.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.AsyncEx.Interop.WaitHandles.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.AsyncEx.Oop.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.AsyncEx.Tasks.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.Cancellation.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.Collections.Deque.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.Disposables.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\System.Collections.Immutable.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Newtonsoft.Json.xml
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.AsyncEx.Context.xml
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.AsyncEx.Coordination.xml
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.AsyncEx.Interop.WaitHandles.xml
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.AsyncEx.Oop.xml
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.AsyncEx.Tasks.xml
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.Cancellation.xml
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.Collections.Deque.xml
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.Disposables.xml
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\System.Collections.Immutable.xml
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.csproj.CopyComplete
