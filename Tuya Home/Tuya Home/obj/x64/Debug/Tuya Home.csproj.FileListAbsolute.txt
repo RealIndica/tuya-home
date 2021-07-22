@@ -43,3 +43,9 @@ C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito
 C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Nito.Disposables.xml
 C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\System.Collections.Immutable.xml
 C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\obj\x64\Debug\Tuya Home.csproj.CopyComplete
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Microsoft.Dynamic.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Microsoft.Scripting.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Microsoft.Scripting.Metadata.dll
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Microsoft.Dynamic.xml
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Microsoft.Scripting.xml
+C:\Users\Leonl\Documents\GitHub\tuya-home\Tuya Home\Tuya Home\bin\x64\Debug\Microsoft.Scripting.Metadata.xml

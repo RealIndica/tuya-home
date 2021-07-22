@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using System.Threading;
 using System.IO;
 using System.Net;
+using Nito.AsyncEx;
 
 namespace Tuya_Home
 {
@@ -19,6 +20,8 @@ namespace Tuya_Home
         Tuya tuya = new Tuya();
         ImageList iconList = new ImageList();
         Tuya.TuyaDevice selectedDevice;
+        Kit.Devices.GenericLight genericLight;
+        Kit.Devices.GenericSwitch genericSwitch;
 
         public Main()
         {
@@ -36,18 +39,21 @@ namespace Tuya_Home
 
         private void loadIPs()
         {
-            toolStripStatusLabel1.Text = "Grabbing IPs . . .";
-
-            int idx = 0;
-            foreach (Tuya.TuyaDevice dev in tuya.devices.ToList())
+            this.BeginInvoke(new MethodInvoker(delegate
             {
-                string ip = IPMacMapper.FindIPFromMacAddress(dev.mac);
-                tuya.devices[idx].ip = ip;
-                listView1.Items[idx].Text = dev.name + "\r\n" + ip;
-                idx++;
-            }
+                toolStripStatusLabel1.Text = "Grabbing IPs . . .";
 
-            toolStripStatusLabel1.Text = "Idle";
+                int idx = 0;
+                foreach (Tuya.TuyaDevice dev in tuya.devices.ToList())
+                {
+                    string ip = IPMacMapper.FindIPFromMacAddress(dev.mac);
+                    tuya.devices[idx].ip = ip;
+                    listView1.Items[idx].Text = dev.name + "\r\n" + ip;
+                    idx++;
+                }
+
+                toolStripStatusLabel1.Text = "Idle";
+            }));
         }
 
         private void loadDevices()
@@ -64,19 +70,68 @@ namespace Tuya_Home
                 newDev.name = dev.name;
                 newDev.mac = cli_wrapper.getDeviceMac(dev.id);
                 newDev.ip = "0.0.0.0";
+                newDev.product_name = dev.product_name;
                 iconList.Images.Add(dev.id, Image.FromStream(imageStreamURL(dev.icon)));
                 tuya.devices.Add(newDev);
             }
 
-            listView1.LargeImageList = iconList;
-
-            int idx = 0;
-            foreach (Tuya.TuyaDevice dev in tuya.devices)
+            this.BeginInvoke(new MethodInvoker(delegate
             {
-                listView1.Items.Add(dev.name + "\r\n" + dev.ip, idx);
-                idx++;
-            }
+                listView1.LargeImageList = iconList;
+
+                int idx = 0;
+                foreach (Tuya.TuyaDevice dev in tuya.devices)
+                {
+                    listView1.Items.Add(dev.name + "\r\n" + dev.ip, idx);
+                    idx++;
+                }
+            }));
+
             loadIPs();
+        }
+
+        private int socketMode()
+        {
+            if (selectedDevice.product_name.Contains("Socket"))
+            {
+                return 0;
+            }
+            else if (selectedDevice.product_name.Contains("RGBC") || selectedDevice.product_name.Contains("Light"))
+            {
+                return 1;
+            }
+
+            return -1;
+        }
+
+        private void manageSelected()
+        {
+            localKeyBox.Text = selectedDevice.localKey;
+            devIdBox.Text = selectedDevice.virtualID;
+            macBox.Text = selectedDevice.mac;
+
+            int m = socketMode();
+            switch (m)
+            {
+                case 0: //smart socket
+                    genericSwitch = new Kit.Devices.GenericSwitch
+                    {
+                        IP = selectedDevice.ip,
+                        devId = selectedDevice.virtualID,
+                        localKey = selectedDevice.localKey,
+                        gwId = selectedDevice.virtualID
+                    };
+                    break;
+                case 1: //smart light
+                    genericLight = new Kit.Devices.GenericLight
+                    {
+                        IP = selectedDevice.ip,
+                        devId = selectedDevice.virtualID,
+                        localKey = selectedDevice.localKey,
+                        gwId = selectedDevice.virtualID
+                    };
+                    break;
+            }
         }
 
 
@@ -97,7 +152,67 @@ namespace Tuya_Home
                 int selectedItem = listView1.SelectedItems[0].Index;
                 selectedDevice = tuya.devices[selectedItem];
                 selectedLabel.Text = selectedDevice.name;
+                manageSelected();
             }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            int m = socketMode();
+            switch (m)
+            {
+                case 0: //smart socket
+                    genericSwitch.Toggle();
+                    break;
+                case 1: //smart light
+                    genericLight.Toggle();
+                    break;
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            int m = socketMode();
+            switch (m)
+            {
+                case 0: //smart socket
+                    genericSwitch.TurnOn();
+                    break;
+                case 1: //smart light
+                    genericLight.TurnOn();
+                    break;
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            int m = socketMode();
+            switch (m)
+            {
+                case 0: //smart socket
+                    genericSwitch.TurnOff();
+                    break;
+                case 1: //smart light
+                    genericLight.TurnOff();
+                    break;
+            }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            Dictionary<string, object> Ginfo = new Dictionary<string, object>();
+            int m = socketMode();
+            switch (m)
+            {
+                case 0: //smart socket
+                    Ginfo = AsyncContext.Run(() => genericSwitch.Get());
+                    break;
+                case 1: //smart light
+                    Ginfo = AsyncContext.Run(() => genericLight.Get());
+                    break;
+            }
+            string jsonOut = JsonConvert.SerializeObject(Ginfo, Formatting.Indented);
+            MessageBox.Show(jsonOut, "Information");
         }
     }
 }

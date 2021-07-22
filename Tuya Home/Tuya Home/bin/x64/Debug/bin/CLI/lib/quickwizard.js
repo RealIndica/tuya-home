@@ -87,7 +87,8 @@ const list = async (conf, options) => {
 			name: device.name,
 			id: device.id,
 			key: device.local_key,
-			icon: 'https://imagesd.tuyaus.com/' + device.icon
+			icon: 'https://imagesd.tuyaus.com/' + device.icon,
+			product_name: device.product_name
 		};
 
 		if (device.subDevices) {
