@@ -13,6 +13,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.Serialization.Formatters.Binary;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -31,6 +32,8 @@ namespace Tuya_Home.Kit
         byte[] versionBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 };
         byte[] commandBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 };
         byte[] payloadLengthBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+        byte[] spacingBytes = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        byte[] ver33Bytes = new byte[] { 0x33, 0x2e, 0x33 };
 
         // Payload (data, checksum, suffix).
         byte[] checksumBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 };
@@ -47,16 +50,16 @@ namespace Tuya_Home.Kit
 
         #region Features
 
-        public async Task<JObject> SendJSONObjectForCommandToDevice(object JSON, Command command, Device device, bool encrypt = false)
-        { return await SendJSONStringForCommandToDevice(JsonConvert.SerializeObject(JSON), command, device, encrypt); }
+        public async Task<JObject> SendJSONObjectForCommandToDevice(object JSON, Command command, Device device, bool encrypt = true)
+        { return await SendJSONStringForCommandToDevice(JsonConvert.SerializeObject(JSON, Formatting.None), command, device, encrypt); }
 
         public async Task<JObject> SendJSONStringForCommandToDevice(string JSON, Command command, Device device, bool encrypt)
         {
-            Log.Format("Request.SendJSONStringForCommandToDevice, JSON: `{0}`", JSON);
+            Log.Format("Request.SendJSONStringForCommandToDevice, JSON: \r\n`{0}`", JSON);
 
             // Request.
             byte[] dataBytes = (encrypt) ? EncryptedBytesFromJSONForDevice(JSON, device) : Encoding.UTF8.GetBytes(JSON);
-            byte[] packetBytes = PacketFromDataForCommand(dataBytes, command);
+            byte[] packetBytes = PacketFromDataForCommand(dataBytes, command, device);
 
             // Send.
             byte[] responsePacketBytes = await SendPacketToDevice(packetBytes, device);
@@ -64,6 +67,7 @@ namespace Tuya_Home.Kit
             // Validate.
             if (IsValidPacket(responsePacketBytes) == false)
             { return null; }
+            Log.Format("Validated Packet Response");
 
             // Parse.
             string responseJSONString = DataStringFromPacket(responsePacketBytes);
@@ -124,7 +128,7 @@ namespace Tuya_Home.Kit
             }
 
             // Lengths.
-            int headerLength = prefixBytes.Length + versionBytes.Length + commandBytes.Length + payloadLengthBytes.Length;
+            int headerLength = prefixBytes.Length + versionBytes.Length + commandBytes.Length + payloadLengthBytes.Length + spacingBytes.Length + ver33Bytes.Length;
             int minimumPayloadLength = checksumBytes.Length + suffixBytes.Length;
             int minimumPacketLength = headerLength + minimumPayloadLength;
 
@@ -150,7 +154,7 @@ namespace Tuya_Home.Kit
             }
 
             // Payload.
-            int payloadLength = BitConverter.ToInt32(packetBytes.Skip(prefixBytes.Length + versionBytes.Length + commandBytes.Length).Take(payloadLengthBytes.Length).Reverse().ToArray(), 0);
+            int payloadLength = BitConverter.ToInt32(packetBytes.Skip(prefixBytes.Length + versionBytes.Length + commandBytes.Length + spacingBytes.Length + ver33Bytes.Length).Take(payloadLengthBytes.Length).Reverse().ToArray(), 0);
             if (packetBytes.Length < headerLength + payloadLength)
             {
                 Log.Format("Missing payload.");
@@ -161,56 +165,10 @@ namespace Tuya_Home.Kit
             return true;
         }
 
-        protected string DataStringFromPacketWithLogs(byte[] packetBytes)
-        {
-            // Header.
-            byte[] packetPrefixBytes = packetBytes.Take(prefixBytes.Length).ToArray();
-            byte[] packetVersionBytes = packetBytes.Skip(prefixBytes.Length).Take(versionBytes.Length).ToArray();
-            byte[] packetCommandBytes = packetBytes.Skip(prefixBytes.Length + versionBytes.Length).Take(commandBytes.Length).ToArray();
-            byte[] packetPayloadLengthBytes = packetBytes.Skip(prefixBytes.Length + versionBytes.Length + commandBytes.Length).Take(payloadLengthBytes.Length).ToArray();
-
-            // Lengths.
-            int headerLength = prefixBytes.Length + versionBytes.Length + commandBytes.Length + payloadLengthBytes.Length;
-            int suffixLength = checksumBytes.Length + suffixBytes.Length;
-
-            // Data.
-            byte[] packetPayloadBytes = packetBytes.Skip(headerLength).ToArray();
-            byte[] packetDataBytes = packetPayloadBytes.Take(packetPayloadBytes.Length - suffixLength).ToArray();
-
-            // Suffix.
-            byte[] packetChecksumBytes = packetBytes.Skip(packetBytes.Length - suffixLength).Take(checksumBytes.Length).ToArray();
-            byte[] packetSuffixBytes = packetBytes.Skip(packetBytes.Length - suffixBytes.Length).ToArray();
-
-            // To string.
-            byte[] packetDataBytesWithoutLeadingZeroes = packetDataBytes.SkipWhile((byte eachByte, int eachIndex) => eachByte == 0x00).ToArray();
-            string packetDataString = Encoding.UTF8.GetString(packetDataBytesWithoutLeadingZeroes);
-
-            // Log bytes.
-            Log.Format("Request.DataFromPacketWithLogs(), packetPrefixBytes: `{0}`", BitConverter.ToString(packetPrefixBytes));
-            Log.Format("Request.DataFromPacketWithLogs(), packetVersionBytes: `{0}`", BitConverter.ToString(packetVersionBytes));
-            Log.Format("Request.DataFromPacketWithLogs(), packetCommandBytes: `{0}`", BitConverter.ToString(packetCommandBytes));
-            Log.Format("Request.DataFromPacketWithLogs(), packetPayloadLengthBytes: `{0}`", BitConverter.ToString(packetPayloadLengthBytes));
-            Log.Format("Request.DataFromPacketWithLogs(), packetPayloadBytes: `{0}`", BitConverter.ToString(packetPayloadBytes));
-            Log.Format("Request.DataFromPacketWithLogs(), packetDataBytes: `{0}`", BitConverter.ToString(packetDataBytes));
-            Log.Format("Request.DataFromPacketWithLogs(), packetChecksumBytes: `{0}`", BitConverter.ToString(packetChecksumBytes));
-            Log.Format("Request.DataFromPacketWithLogs(), packetSuffixBytes: `{0}`", BitConverter.ToString(packetSuffixBytes));
-
-            // Log lengths.
-            int payloadLength = BitConverter.ToInt32(packetPayloadLengthBytes.Reverse().ToArray(), 0);
-            Log.Format("Device.DataFromPacketWithLogs(), payloadLength: `{0}`", payloadLength);
-            Log.Format("Device.DataFromPacketWithLogs(), packetPayloadBytes.Length: `{0}`", packetPayloadBytes.Length);
-            Log.Format("Device.DataFromPacketWithLogs(), packetDataBytes.Length: `{0}`", packetDataBytes.Length);
-
-            // Log string.
-            Log.Format("Device.DataFromPacketWithLogs(), packetDataString: `{0}`", packetDataString);
-
-            return packetDataString;
-        }
-
         protected string DataStringFromPacket(byte[] packetBytes)
         {
             // Lengths.
-            int headerLength = prefixBytes.Length + versionBytes.Length + commandBytes.Length + payloadLengthBytes.Length;
+            int headerLength = prefixBytes.Length + versionBytes.Length + commandBytes.Length + payloadLengthBytes.Length + spacingBytes.Length + ver33Bytes.Length;
             int suffixLength = checksumBytes.Length + suffixBytes.Length;
 
             // Data.
@@ -224,32 +182,122 @@ namespace Tuya_Home.Kit
             return packetDataString;
         }
 
-        protected byte[] PacketFromDataForCommand(byte[] dataBytes, Command command)
+        public static void PrintByteArray(byte[] ba, string name)
+        {
+            StringBuilder hex = new StringBuilder(ba.Length * 2);
+            foreach (byte b in ba)
+            {
+                hex.AppendFormat("{0:x2}", b);
+                hex.Append("-");
+            }
+
+            Console.WriteLine("\r\n[" + name + "] [" + ba.Length.ToString() + "]\r\n" + hex.ToString());
+        }
+
+        private byte[] nullBytes(int count)
+        {
+            List<byte> b = new List<byte>();
+            for (int i = 0; i < count; i++)
+            {
+                b.Add(0x00);
+            }
+            return b.ToArray();
+        }
+
+        private byte[] SubArray(byte[] array, int startIndex, int endIndex)
+        {
+            byte[] result = new byte[endIndex - startIndex];
+            Array.Copy(array, startIndex, result, 0, endIndex - startIndex);
+            return result;
+        }
+
+        private byte[] AddArray(params byte[][] arrays)
+        {
+            List<byte> tempArray = new List<byte>();
+            foreach (byte b in arrays.SelectMany(x => x))
+            {
+                tempArray.Add(b);
+            }
+            return tempArray.ToArray();
+        }
+
+        private int ByteSearch(byte[] src, byte[] pattern)
+        {
+            int maxFirstCharSlot = src.Length - pattern.Length + 1;
+            for (int i = 0; i < maxFirstCharSlot; i++)
+            {
+                if (src[i] != pattern[0]) // compare only first byte
+                    continue;
+
+                // found a match on first byte, now try to match rest of the pattern
+                for (int j = pattern.Length - 1; j >= 1; j--)
+                {
+                    if (src[i + j] != pattern[j]) break;
+                    if (j == 1) return i;
+                }
+            }
+            return -1;
+        }
+
+        protected byte[] PacketFromDataForCommand(byte[] dataBytes, Command command, Device dev)
         {
             // Set command.
             commandBytes[3] = (byte)command;
 
-            // Count payload length (data with checksum and suffix).
-            payloadLengthBytes = BitConverter.GetBytes(dataBytes.Length + checksumBytes.Length + suffixBytes.Length);
+            // Count payload length
+            int payloadLengthInt = ver33Bytes.Length + spacingBytes.Length + dataBytes.Length + checksumBytes.Length + suffixBytes.Length;
+            payloadLengthBytes = BitConverter.GetBytes(payloadLengthInt);
             if (BitConverter.IsLittleEndian) Array.Reverse(payloadLengthBytes); // Big endian
 
             // Assemble packet.
             using (MemoryStream memoryStream = new MemoryStream())
             {
                 // Header (prefix, version, command, payload length).
-                memoryStream.Write(prefixBytes, 0, prefixBytes.Length);
-                memoryStream.Write(versionBytes, 0, versionBytes.Length);
-                memoryStream.Write(commandBytes, 0, commandBytes.Length);
-                memoryStream.Write(payloadLengthBytes, 0, payloadLengthBytes.Length);
+                memoryStream.Write(prefixBytes, 0, prefixBytes.Length); //4
+                PrintByteArray(prefixBytes, "Prefix Bytes"); 
+
+                memoryStream.Write(versionBytes, 0, versionBytes.Length); 
+                PrintByteArray(versionBytes, "Version Bytes");
+
+                memoryStream.Write(commandBytes, 0, commandBytes.Length); 
+                PrintByteArray(commandBytes, "Command Bytes");
+
+                memoryStream.Write(payloadLengthBytes, 0, payloadLengthBytes.Length); 
+                PrintByteArray(payloadLengthBytes, "Payload Length Bytes");
+
+                // 3.3 Pre-payload
+                if (command == Command.SetStatus)
+                {
+                    memoryStream.Write(ver33Bytes, 0, ver33Bytes.Length); 
+                    PrintByteArray(ver33Bytes, "Ver33 Bytes");
+                }
+
+                // Space between header and payload
+                memoryStream.Write(spacingBytes, 0, spacingBytes.Length); 
+                PrintByteArray(spacingBytes, "Spacing Bytes");
 
                 // Payload (data, checksum, suffix).
                 memoryStream.Write(dataBytes, 0, dataBytes.Length);
+                PrintByteArray(dataBytes, "Data Bytes");
+
+
+                byte[] checksumTarget = memoryStream.ToArray();
+                PrintByteArray(checksumTarget, "Checksum Target");
+
+                uint crc = Crc32.crc32(checksumTarget) & 0xFFFFFFFF;
+                checksumBytes = Crc32.intToBytes(crc);
                 memoryStream.Write(checksumBytes, 0, checksumBytes.Length);
+                PrintByteArray(checksumBytes, "Checksum Bytes");
+
+
                 memoryStream.Write(suffixBytes, 0, suffixBytes.Length);
+                PrintByteArray(suffixBytes, "Suffix Bytes");
+
 
                 return memoryStream.ToArray();
             }
         }
+
 
         #endregion
 
@@ -258,6 +306,44 @@ namespace Tuya_Home.Kit
 
         // From https://github.com/codetheweb/tuyapi/blob/master/index.js#L300
         byte[] EncryptedBytesFromJSONForDevice(string JSON, Device device)
+        {
+            Log.Format("Request.EncryptedBytesFromJSONForDevice()");
+
+            // Key.
+            byte[] xkey = Encoding.UTF8.GetBytes(device.localKey);
+
+            // Encrypt with key.
+            using (var aes = new AesManaged() { Mode = CipherMode.ECB, Key = xkey, Padding = PaddingMode.PKCS7  })
+            {
+                byte[] encryptedData;
+
+                using (var input = new MemoryStream(Encoding.UTF8.GetBytes(JSON)))
+                using (var output = new MemoryStream())
+                {
+                    ICryptoTransform encryptor = aes.CreateEncryptor();
+                    using (var cryptStream = new CryptoStream(output, encryptor, CryptoStreamMode.Write))
+                    {
+                        var buffer = new byte[1024];
+                        var read = input.Read(buffer, 0, buffer.Length);
+                        while (read > 0)
+                        {
+                            cryptStream.Write(buffer, 0, read);
+                            read = input.Read(buffer, 0, buffer.Length);
+                        }
+                        cryptStream.FlushFinalBlock();
+                        encryptedData = output.ToArray();
+                    }
+                }
+
+                return encryptedData;
+            }
+
+        }
+
+        #endregion
+
+        #region temp
+        byte[] xEncryptedBytesFromJSONForDevice(string JSON, Device device)
         {
             Log.Format("Request.EncryptedBytesFromJSONForDevice()");
 
@@ -272,8 +358,11 @@ namespace Tuya_Home.Kit
             {
                 byte[] JSONBytes = Encoding.UTF8.GetBytes(JSON);
                 cryptoStream.Write(JSONBytes, 0, JSONBytes.Length);
+                StreamReader reader = new StreamReader(encryptedStream);
+                string text = reader.ReadToEnd();
                 cryptoStream.Close();
-                encryptedJSONBase64String = Convert.ToBase64String(encryptedStream.ToArray());
+                //encryptedJSONBase64String = Convert.ToBase64String(encryptedStream.ToArray());
+                encryptedJSONBase64String = text;
             }
 
             // Create hash.
@@ -293,7 +382,45 @@ namespace Tuya_Home.Kit
             return Encoding.UTF8.GetBytes($"{device.protocolVersion}{hashString}{encryptedJSONBase64String}");
         }
 
-        #endregion
+        /*protected byte[] PacketFromDataForCommand(byte[] dataBytes, Command command, Device dev)
+{
+    // Assemble packet.
+    using (MemoryStream memoryStream = new MemoryStream())
+    {
+        using (BinaryWriter bw = new BinaryWriter(memoryStream))
+        {
+            memoryStream.Write(nullBytes(1024), 0, 1024);
 
+            memoryStream.Position = 0;
+            memoryStream.Write(prefixBytes, 0, prefixBytes.Length);
+
+            int len = prefixBytes.Length - 1;
+
+            memoryStream.Position = 8 + len;
+            memoryStream.Write(new byte[] { (byte)command }, 0, 1);
+
+            memoryStream.Position = 12 + len;
+            bw.Write((int)dataBytes.Length + 8);
+
+            memoryStream.Position = 13 + len;
+            byte[] vBytes = Encoding.UTF8.GetBytes($"{dev.protocolVersion}");
+            memoryStream.Write(vBytes, 0, vBytes.Length);
+
+            byte[] selected = SubArray(memoryStream.ToArray(), 0, dataBytes.Length + 16);
+            UInt32 crc = Crc32.crc32(selected) & 0xFFFFFFFF;
+
+            memoryStream.Position = dataBytes.Length + 16;
+            memoryStream.Write(BitConverter.GetBytes(crc), 0, BitConverter.GetBytes(crc).Length);
+
+            memoryStream.Write(suffixBytes, 0, suffixBytes.Length);
+
+            int delIdx = ByteSearch(memoryStream.ToArray(), suffixBytes);
+            byte[] fin = SubArray(memoryStream.ToArray(), 0, delIdx + suffixBytes.Length);
+            PrintByteArray(BitConverter.GetBytes(crc).);
+            return fin;
+        }
+    }
+}*/
+        #endregion
     }
 }

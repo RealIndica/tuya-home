@@ -96,7 +96,7 @@ namespace Tuya_Home
             {
                 return 0;
             }
-            else if (selectedDevice.product_name.Contains("RGBC") || selectedDevice.product_name.Contains("Light"))
+            else if (selectedDevice.product_name.ToLower().Contains("rgbc") || selectedDevice.product_name.ToLower().Contains("light"))
             {
                 return 1;
             }

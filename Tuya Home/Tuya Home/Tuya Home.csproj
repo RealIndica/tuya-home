@@ -124,7 +124,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tuya.cs" />
-    <Compile Include="TuyaKit\AES.cs" />
+    <Compile Include="TuyaKit\Crc32.cs" />
     <Compile Include="TuyaKit\Device.cs" />
     <Compile Include="TuyaKit\Devices\GenericLight.cs" />
     <Compile Include="TuyaKit\Devices\GenericPlug.cs" />

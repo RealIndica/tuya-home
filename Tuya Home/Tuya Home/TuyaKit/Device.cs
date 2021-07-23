@@ -39,15 +39,19 @@ namespace Tuya_Home.Kit
 
         public async Task<Dictionary<string, object>> Get()
         {
+            int epoch = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
             // Get the response.
             JObject response = await new Request().SendJSONObjectForCommandToDevice(
                 new Dictionary<string, object>
                 {
+                    ["devId"] = this.devId,
                     ["gwId"] = this.gwId,
-                    ["devId"] = this.devId
+                    ["uid"] = this.devId,
+                    ["t"] = epoch,
+                    ["dps"] = { }
                 },
                 Request.Command.GetStatus,
-                this);
+                this, true);
 
             // Pick "dps" only (if any).
             return response["dps"].ToObject<Dictionary<string, object>>();
@@ -58,11 +62,12 @@ namespace Tuya_Home.Kit
             int epoch = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
             JObject response = await new Request().SendJSONObjectForCommandToDevice(
                 new Dictionary<string, object>
-                {
-                    ["t"] = epoch,
+                {              
                     ["devId"] = this.devId,
-                    ["dps"] = dps,
-                    ["uid"] = ""
+                    ["gwId"] = this.gwId,
+                    ["uid"] = "",
+                    ["t"] = epoch,
+                    ["dps"] = dps
                 },
                 Request.Command.SetStatus,
                 this,
