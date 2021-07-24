@@ -108,7 +108,6 @@ namespace Tuya_Home.Kit
 
             }
 
-
             byte[] responseStream;
 
             using (tcpClient)
@@ -208,11 +207,6 @@ namespace Tuya_Home.Kit
             byte returnCode = packetBytes[15];
             byte[] payload;
 
-            /*Log.Format("Payload Size = {0}", payloadLength);
-            Log.Format("Return Code = {0}", returnCode);
-
-            PrintByteArray(packetBytes, "Reponse Data Stripped");*/
-
             try
             {
                 if (returnCode == 0)
@@ -228,8 +222,6 @@ namespace Tuya_Home.Kit
             {
                 payload = new byte[] { 0x00 };
             }
-
-            //PrintByteArray(payload, "Response Payload");
 
             string d = Encoding.UTF8.GetString(payload);
             try
