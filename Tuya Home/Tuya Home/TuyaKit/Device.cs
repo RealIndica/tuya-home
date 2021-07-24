@@ -15,15 +15,12 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 
-namespace Tuya_Home.Kit
+namespace EPPZ.Tuya
 {
-
 
     [Serializable]
     public class Device
     {
-
-
         // Network properties.
         public string IP;
         public int port = 6668;
@@ -32,7 +29,6 @@ namespace Tuya_Home.Kit
         // Device properties.  
         public string name;
         public string devId;
-        public string gwId;
         public string productId;
         public string localKey;
 
@@ -51,7 +47,7 @@ namespace Tuya_Home.Kit
                 new Dictionary<string, object>
                 {
                     ["gwId"] = this.devId,
-                    ["devId"] = this.gwId,
+                    ["devId"] = this.devId,
                     ["t"] = epoch,
                     ["dps"] = nulldps,
                     ["uid"] = this.devId
@@ -66,7 +62,7 @@ namespace Tuya_Home.Kit
                 new Dictionary<string, object>
                 {
                     ["gwId"] = this.devId,
-                    ["devId"] = this.gwId,
+                    ["devId"] = this.devId,
                     ["t"] = epoch,
                     ["dps"] = nulldps,
                     ["uid"] = this.devId,
@@ -86,7 +82,7 @@ namespace Tuya_Home.Kit
                 new Dictionary<string, object>
                 {
                     ["devId"] = this.devId,
-                    ["gwId"] = this.gwId,
+                    ["gwId"] = this.devId,
                     ["uid"] = "",
                     ["t"] = epoch,
                     ["dps"] = dps
@@ -140,7 +136,7 @@ namespace Tuya_Home.Kit
 
             bool isOn = (bool)dps[auto];
             if (isOn) TurnOffAuto(dev); else TurnOnAuto(dev);
-            
+
         }
 
         #endregion

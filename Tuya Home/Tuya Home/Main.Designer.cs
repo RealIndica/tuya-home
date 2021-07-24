@@ -284,7 +284,7 @@ namespace Tuya_Home
             this.groupBox4.Size = new System.Drawing.Size(177, 322);
             this.groupBox4.TabIndex = 7;
             this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Paramater Editor";
+            this.groupBox4.Text = "Parameter Editor";
             // 
             // editPanel
             // 

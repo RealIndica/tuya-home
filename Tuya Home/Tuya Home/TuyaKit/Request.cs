@@ -13,13 +13,12 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using System.Runtime.Serialization.Formatters.Binary;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 
-namespace Tuya_Home.Kit
+namespace EPPZ.Tuya
 {
 
 
@@ -48,16 +47,22 @@ namespace Tuya_Home.Kit
             GetSSIDList = 0x0b
         }
 
+        private byte[] SubArray(byte[] array, int startIndex, int endIndex)
+        {
+            byte[] result = new byte[endIndex - startIndex];
+            Array.Copy(array, startIndex, result, 0, endIndex - startIndex);
+            return result;
+        }
+
         #region Features
 
-        public async Task<JObject> SendJSONObjectForCommandToDevice(object JSON, Command command, Device device, bool encrypt = true)
-        { return await SendJSONStringForCommandToDevice(JsonConvert.SerializeObject(JSON, Formatting.None), command, device, encrypt); }
+        public async Task<JObject> SendJSONObjectForCommandToDevice(object JSON, Command command, Device device, bool encrypt = false)
+        { return await SendJSONStringForCommandToDevice(JsonConvert.SerializeObject(JSON), command, device, encrypt); }
 
         public async Task<JObject> SendJSONStringForCommandToDevice(string JSON, Command command, Device device, bool encrypt)
         {
-            Log.Format("\r\njson input: \r\n`{0}`", JSON);
+            Log.Format("Request.SendJSONStringForCommandToDevice, JSON: `{0}`", JSON);
 
-            
             // Request.
             byte[] dataBytes = (encrypt) ? Encrypt(JSON, device) : Encoding.UTF8.GetBytes(JSON);
             byte[] packetBytes = PacketFromDataForCommand(dataBytes, command, device);
@@ -68,7 +73,6 @@ namespace Tuya_Home.Kit
             // Validate.
             if (IsValidPacket(responsePacketBytes) == false)
             { return null; }
-            Log.Format("Validated Packet Response");
 
             // Parse.
             string responseJSONString = DataStringFromPacket(responsePacketBytes, device);
@@ -76,9 +80,7 @@ namespace Tuya_Home.Kit
 
             // Only if any.
             if (responseJSONString == string.Empty || responseJSONString.Length <= 1)
-            {
                 return new JObject();
-            }
 
             // Create object.
             JObject responseJSONObject = JObject.Parse(responseJSONString);
@@ -96,8 +98,8 @@ namespace Tuya_Home.Kit
             bool dataSuccess = false;
         START:
             Log.Format("Request.SendDataToDevice(), packetBytes.Length: `{0}`", packetBytes.Length);
-            TcpClient tcpClient = new TcpClient();
 
+            TcpClient tcpClient = new TcpClient();
             while (!tcpClient.Connected)
             {
                 try
@@ -105,11 +107,8 @@ namespace Tuya_Home.Kit
                     tcpClient.Connect(device.IP, device.port);
                 }
                 catch (Exception) { }
-
             }
-
             byte[] responseStream;
-
             using (tcpClient)
             using (NetworkStream networkStream = tcpClient.GetStream())
             using (MemoryStream responseMemoryStream = new MemoryStream())
@@ -134,13 +133,11 @@ namespace Tuya_Home.Kit
                 }
                 catch (Exception) { responseStream = new byte[] { 0x00 }; }
             }
-
             if (!dataSuccess)
             {
                 System.Threading.Thread.Sleep(100);
                 goto START;
             }
-
             tcpClient.Close();
             tcpClient.Dispose();
             return responseStream;
@@ -183,10 +180,9 @@ namespace Tuya_Home.Kit
 
             // Payload.
             int payloadLength = BitConverter.ToInt32(packetBytes.Skip(prefixBytes.Length + versionBytes.Length + commandBytes.Length).Take(payloadLengthBytes.Length).Reverse().ToArray(), 0);
-
             if (packetBytes.Length < payloadLength)
             {
-                Log.Format("Missing payload. Length : {0} | Payload Length : {1}", packetBytes.Length, payloadLength);
+                Log.Format("Missing payload.");
                 return false;
             }
 
@@ -194,103 +190,70 @@ namespace Tuya_Home.Kit
             return true;
         }
 
-        protected string DataStringFromPacket(byte[] packetBytes, Device device)
+        protected string DataStringFromPacket(byte[] packetBytes, Device dev)
         {
-            packetBytes = SubArray(packetBytes, 4, packetBytes.Length - 4);
-
-            byte[] payloadLengthBytes = new byte[] { packetBytes[8], packetBytes[9], packetBytes[10], packetBytes[11] };
-
-            if (BitConverter.IsLittleEndian)
-                Array.Reverse(payloadLengthBytes);
-
-            int payloadLength = BitConverter.ToInt32(payloadLengthBytes, 0);
-            byte returnCode = packetBytes[15];
-            byte[] payload;
-
-            try
+            if (dev.protocolVersion == "3.1")
             {
-                if (returnCode == 0)
+                // Lengths.
+                int headerLength = prefixBytes.Length + versionBytes.Length + commandBytes.Length + payloadLengthBytes.Length;
+                int suffixLength = checksumBytes.Length + suffixBytes.Length;
+
+                // Data.
+                byte[] packetPayloadBytes = packetBytes.Skip(headerLength).ToArray(); // Skip header
+                byte[] packetDataBytes = packetPayloadBytes.Take(packetPayloadBytes.Length - suffixLength).ToArray(); // Trim suffix
+
+                // To string.
+                byte[] packetDataBytesWithoutLeadingZeroes = packetDataBytes.SkipWhile((byte eachByte, int eachIndex) => eachByte == 0x00).ToArray();
+                string packetDataString = Encoding.UTF8.GetString(packetDataBytesWithoutLeadingZeroes);
+
+                return packetDataString;
+            } 
+            else
+            {
+                // Remove prefix and suffix
+                packetBytes = SubArray(packetBytes, 4, packetBytes.Length - 4);
+
+                // Get length of payload from returned data
+                byte[] payloadLengthBytes = new byte[] { packetBytes[8], packetBytes[9], packetBytes[10], packetBytes[11] };
+
+                if (BitConverter.IsLittleEndian)
+                    Array.Reverse(payloadLengthBytes);
+
+                int payloadLength = BitConverter.ToInt32(payloadLengthBytes, 0);
+
+
+                // Get return code
+                byte returnCode = packetBytes[15];
+
+                byte[] payload;
+
+                // Extract payload from data
+                try
                 {
-                    payload = SubArray(packetBytes, headerSize, headerSize + payloadLength - 12);
+                    if (returnCode == 0)
+                    {
+                        payload = SubArray(packetBytes, headerSize, headerSize + payloadLength - 12);
+                    }
+                    else
+                    {
+                        payload = SubArray(packetBytes, headerSize + 4, headerSize + payloadLength - 12);
+                    }
                 }
-                else
+                catch (Exception)
                 {
-                    payload = SubArray(packetBytes, headerSize + 4, headerSize + payloadLength - 12);
+                    payload = new byte[] { 0x00 };
                 }
-            }
-            catch (Exception)
-            {
-                payload = new byte[] { 0x00 };
-            }
 
-            string d = Encoding.UTF8.GetString(payload);
-            try
-            {
-                d = Decrypt(payload, device);
-            }
-            catch (Exception)
-            {
-                
-            }
-
-            return d;
-        }
-
-        public static void PrintByteArray(byte[] ba, string name)
-        {
-            StringBuilder hex = new StringBuilder(ba.Length * 2);
-            foreach (byte b in ba)
-            {
-                hex.AppendFormat("{0:x2}", b);
-                hex.Append("-");
-            }
-
-            Console.WriteLine("\r\n[" + name + "] [" + ba.Length.ToString() + "]\r\n" + hex.ToString());
-        }
-
-        private byte[] nullBytes(int count)
-        {
-            List<byte> b = new List<byte>();
-            for (int i = 0; i < count; i++)
-            {
-                b.Add(0x00);
-            }
-            return b.ToArray();
-        }
-
-        private byte[] SubArray(byte[] array, int startIndex, int endIndex)
-        {
-            byte[] result = new byte[endIndex - startIndex];
-            Array.Copy(array, startIndex, result, 0, endIndex - startIndex);
-            return result;
-        }
-
-        private byte[] AddArray(params byte[][] arrays)
-        {
-            List<byte> tempArray = new List<byte>();
-            foreach (byte b in arrays.SelectMany(x => x))
-            {
-                tempArray.Add(b);
-            }
-            return tempArray.ToArray();
-        }
-
-        private int ByteSearch(byte[] src, byte[] pattern)
-        {
-            int maxFirstCharSlot = src.Length - pattern.Length + 1;
-            for (int i = 0; i < maxFirstCharSlot; i++)
-            {
-                if (src[i] != pattern[0]) // compare only first byte
-                    continue;
-
-                // found a match on first byte, now try to match rest of the pattern
-                for (int j = pattern.Length - 1; j >= 1; j--)
+                // Decrypt payload
+                string d = Encoding.UTF8.GetString(payload);
+                try
                 {
-                    if (src[i + j] != pattern[j]) break;
-                    if (j == 1) return i;
+                    d = Decrypt(payload, dev);
                 }
+                catch (Exception) { }
+
+                return d;
             }
-            return -1;
         }
 
         protected byte[] PacketFromDataForCommand(byte[] dataBytes, Command command, Device dev)
@@ -311,51 +274,71 @@ namespace Tuya_Home.Kit
             // Assemble packet.
             using (MemoryStream memoryStream = new MemoryStream())
             {
-                // Header (prefix, version, command, payload length).
-                memoryStream.Write(prefixBytes, 0, prefixBytes.Length); 
-                memoryStream.Write(versionBytes, 0, versionBytes.Length); 
-                memoryStream.Write(commandBytes, 0, commandBytes.Length); 
-
-                if (command == Command.SetStatus)
+                if (dev.protocolVersion == "3.1")
                 {
+                    // Header (prefix, version, command, payload length).
+                    memoryStream.Write(prefixBytes, 0, prefixBytes.Length);
+                    memoryStream.Write(versionBytes, 0, versionBytes.Length);
+                    memoryStream.Write(commandBytes, 0, commandBytes.Length);
                     memoryStream.Write(payloadLengthBytes, 0, payloadLengthBytes.Length);
-                    memoryStream.Write(ver33Bytes, 0, ver33Bytes.Length);
-                    memoryStream.Write(spacingBytes, 0, spacingBytes.Length);
-                }
+
+                    // Payload (data, checksum, suffix).
+                    memoryStream.Write(dataBytes, 0, dataBytes.Length);
+                    memoryStream.Write(checksumBytes, 0, checksumBytes.Length);
+                    memoryStream.Write(suffixBytes, 0, suffixBytes.Length);
+
+                    return memoryStream.ToArray();
+                } 
                 else
                 {
-                    memoryStream.Write(payloadLengthBytesReq, 0, payloadLengthBytesReq.Length);
+                    // Header (prefix, version, command, payload length).
+                    memoryStream.Write(prefixBytes, 0, prefixBytes.Length);
+                    memoryStream.Write(versionBytes, 0, versionBytes.Length);
+                    memoryStream.Write(commandBytes, 0, commandBytes.Length);
+
+                    //Add 3.3 header
+                    if (command == Command.SetStatus)
+                    {
+                        memoryStream.Write(payloadLengthBytes, 0, payloadLengthBytes.Length);
+                        memoryStream.Write(ver33Bytes, 0, ver33Bytes.Length);
+                        memoryStream.Write(spacingBytes, 0, spacingBytes.Length);
+                    }
+                    else
+                    {
+                        memoryStream.Write(payloadLengthBytesReq, 0, payloadLengthBytesReq.Length);
+                    }
+
+                    // Payload (data, checksum, suffix).
+                    memoryStream.Write(dataBytes, 0, dataBytes.Length);
+
+                    byte[] checksumTarget = memoryStream.ToArray();
+                    uint crc = Crc32.crc32(checksumTarget) & 0xFFFFFFFF;
+                    checksumBytes = Crc32.intToBytes(crc);
+                    memoryStream.Write(checksumBytes, 0, checksumBytes.Length);
+
+                    memoryStream.Write(suffixBytes, 0, suffixBytes.Length);
+
+                    return memoryStream.ToArray();
                 }
-
-                // Payload (data, checksum, suffix).
-                memoryStream.Write(dataBytes, 0, dataBytes.Length);
-
-                byte[] checksumTarget = memoryStream.ToArray();
-                uint crc = Crc32.crc32(checksumTarget) & 0xFFFFFFFF;
-                checksumBytes = Crc32.intToBytes(crc);
-                memoryStream.Write(checksumBytes, 0, checksumBytes.Length);
-
-                memoryStream.Write(suffixBytes, 0, suffixBytes.Length);
-
-                return memoryStream.ToArray();
             }
         }
-
 
         #endregion
 
 
-        #region AES
+        #region Encryption
 
+        // From https://github.com/codetheweb/tuyapi/blob/master/index.js#L300
         byte[] Encrypt(string JSON, Device device)
         {
-            Log.Format("Packet.Encrypt()");
+            Log.Format("Data.Encrypt()");
 
             // Key.
-            byte[] xkey = Encoding.UTF8.GetBytes(device.localKey);
+            byte[] key = Encoding.UTF8.GetBytes(device.localKey);
 
             // Encrypt with key.
-            using (AesManaged aes = new AesManaged() { Mode = CipherMode.ECB, Key = xkey })
+            string encryptedJSON;
+            using (AesManaged aes = new AesManaged() { Mode = CipherMode.ECB, Key = key })
             using (MemoryStream encryptedStream = new MemoryStream())
             using (CryptoStream cryptoStream = new CryptoStream(encryptedStream, aes.CreateEncryptor(), CryptoStreamMode.Write))
             {
@@ -363,13 +346,33 @@ namespace Tuya_Home.Kit
                 cryptoStream.Write(JSONBytes, 0, JSONBytes.Length);
                 cryptoStream.FlushFinalBlock();
                 cryptoStream.Close();
-                return encryptedStream.ToArray();
+                if (device.protocolVersion == "3.1")
+                    encryptedJSON = Convert.ToBase64String(encryptedStream.ToArray()); // Proceed with 3.1 algorithm.
+                else
+                    return encryptedStream.ToArray(); // Return 3.3 syntax encrypted bytes.
             }
+
+            // Create hash if 3.1.
+            string hashString;
+            using (MD5 md5 = MD5.Create())
+            using (MemoryStream hashBaseStream = new MemoryStream())
+            {
+                byte[] encryptedPayload = Encoding.UTF8.GetBytes($"data={encryptedJSON}||lpv={device.protocolVersion}||");
+                hashBaseStream.Write(encryptedPayload, 0, encryptedPayload.Length);
+                hashBaseStream.Write(key, 0, key.Length);
+                byte[] hashBytes = md5.ComputeHash(hashBaseStream.ToArray());
+                string hash = BitConverter.ToString(hashBytes).Replace("-", string.Empty).ToLower();
+                hashString = hash.Substring(8, 16);
+            }
+            
+
+            // Stitch together if 3.1.
+            return Encoding.UTF8.GetBytes($"{device.protocolVersion}{hashString}{encryptedJSON}");
         }
 
         string Decrypt(byte[] data, Device device)
         {
-            Log.Format("Packet.Decrypt()");
+            Log.Format("Data.Decrypt()");
 
             // Key.
             byte[] xkey = Encoding.UTF8.GetBytes(device.localKey);
@@ -388,5 +391,6 @@ namespace Tuya_Home.Kit
         }
 
         #endregion
+
     }
 }

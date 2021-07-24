@@ -8,7 +8,7 @@
 using System;
 
 
-namespace Tuya_Home.Kit
+namespace EPPZ.Tuya
 {
 
 
@@ -18,7 +18,13 @@ namespace Tuya_Home.Kit
 
         public static void Format(string formatString, params object[] parameters)
         {
+
+#if UNITY_EDITOR
+            UnityEngine.Debug.LogFormat(formatString, parameters);
+#else
             Console.WriteLine(string.Format(formatString, parameters));
+#endif
+
         }
     }
 }
