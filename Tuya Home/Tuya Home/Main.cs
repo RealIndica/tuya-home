@@ -12,6 +12,7 @@ using System.Threading;
 using System.IO;
 using System.Net;
 using Nito.AsyncEx;
+using System.Diagnostics;
 
 namespace Tuya_Home
 {
@@ -37,24 +38,23 @@ namespace Tuya_Home
             return new MemoryStream(data);
         }
 
+
         private void loadIPs()
         {
-            this.BeginInvoke(new MethodInvoker(delegate
+            toolStripStatusLabel1.Text = "Grabbing IPs . . .";
+
+            int idx = 0;
+            foreach (Tuya.TuyaDevice dev in tuya.devices.ToList())
             {
-                toolStripStatusLabel1.Text = "Grabbing IPs . . .";
+                string ip = IPMacMapper.FindIPFromMacAddress(dev.mac);
+                tuya.devices[idx].ip = ip;
+                listView1.Items[idx].Text = dev.name + "\r\n" + ip;
+                idx++;
+            }
 
-                int idx = 0;
-                foreach (Tuya.TuyaDevice dev in tuya.devices.ToList())
-                {
-                    string ip = IPMacMapper.FindIPFromMacAddress(dev.mac);
-                    tuya.devices[idx].ip = ip;
-                    listView1.Items[idx].Text = dev.name + "\r\n" + ip;
-                    idx++;
-                }
-
-                toolStripStatusLabel1.Text = "Idle";
-            }));
+            toolStripStatusLabel1.Text = "Idle";
         }
+
 
         private void loadDevices()
         {
@@ -75,20 +75,17 @@ namespace Tuya_Home
                 tuya.devices.Add(newDev);
             }
 
-            this.BeginInvoke(new MethodInvoker(delegate
+
+            listView1.LargeImageList = iconList;
+
+            int idx = 0;
+            foreach (Tuya.TuyaDevice dev in tuya.devices)
             {
-                listView1.LargeImageList = iconList;
-
-                int idx = 0;
-                foreach (Tuya.TuyaDevice dev in tuya.devices)
-                {
-                    listView1.Items.Add(dev.name + "\r\n" + dev.ip, idx);
-                    idx++;
-                }
-            }));
-
-            loadIPs();
+                listView1.Items.Add(dev.name + "\r\n" + dev.ip, idx);
+                idx++;
+            }
         }
+
 
         private int socketMode()
         {
@@ -134,10 +131,17 @@ namespace Tuya_Home
             }
         }
 
-
         private void Main_Load(object sender, EventArgs e)
         {
-            new Thread(() => { loadDevices(); }).Start();
+            if (!Debugger.IsAttached)
+            {
+                new Thread(() => { loadDevices(); loadIPs(); }).Start();
+            }
+            else
+            {
+                loadDevices();
+                loadIPs();
+            }
         }
 
         private void menuItem2_Click(object sender, EventArgs e)
@@ -153,6 +157,7 @@ namespace Tuya_Home
                 selectedDevice = tuya.devices[selectedItem];
                 selectedLabel.Text = selectedDevice.name;
                 manageSelected();
+                updateEditor();
             }
         }
 
@@ -162,10 +167,10 @@ namespace Tuya_Home
             switch (m)
             {
                 case 0: //smart socket
-                    genericSwitch.Toggle();
+                    genericSwitch.ToggleAuto(genericSwitch);
                     break;
                 case 1: //smart light
-                    genericLight.Toggle();
+                    genericLight.ToggleAuto(genericLight);
                     break;
             }
         }
@@ -176,10 +181,10 @@ namespace Tuya_Home
             switch (m)
             {
                 case 0: //smart socket
-                    genericSwitch.TurnOn();
+                    genericSwitch.TurnOnAuto(genericSwitch);
                     break;
                 case 1: //smart light
-                    genericLight.TurnOn();
+                    genericLight.TurnOnAuto(genericLight);
                     break;
             }
         }
@@ -190,10 +195,10 @@ namespace Tuya_Home
             switch (m)
             {
                 case 0: //smart socket
-                    genericSwitch.TurnOff();
+                    genericSwitch.TurnOffAuto(genericSwitch);
                     break;
                 case 1: //smart light
-                    genericLight.TurnOff();
+                    genericLight.TurnOffAuto(genericLight);
                     break;
             }
         }
@@ -205,14 +210,149 @@ namespace Tuya_Home
             switch (m)
             {
                 case 0: //smart socket
+                    Ginfo = AsyncContext.Run(() => genericSwitch.Get(true));
+                    break;
+                case 1: //smart light
+                    Ginfo = AsyncContext.Run(() => genericLight.Get(true));
+                    break;
+            }
+            string jsonOut = JsonConvert.SerializeObject(Ginfo, Formatting.Indented);
+            MessageBox.Show(jsonOut, "Information");
+        }
+
+        private void addEditorItem(string key, string value, int y)
+        {
+            TextBox textBox = new TextBox();
+            Label label = new Label();
+            Panel panel = new Panel();
+
+            panel.Controls.Add(textBox);
+            panel.Controls.Add(label);
+
+            panel.Location = new Point(0, y);
+            label.Location = new Point(0, 0);
+            textBox.Location = new Point(0, 15);
+
+            panel.Size = new Size(editPanel.Width - 17, textBox.Size.Height + label.Size.Height);
+            textBox.Size = new Size(panel.Size.Width - 5, textBox.Size.Height);
+
+            label.Text = key;
+            textBox.Text = value;
+            textBox.Tag = value;
+
+            editPanel.Controls.Add(panel);
+        }
+
+        private void updateEditor()
+        {
+            editPanel.Controls.Clear();
+            editPanel.Update();
+
+            Dictionary<string, object> Ginfo = new Dictionary<string, object>();
+            int m = socketMode();
+            switch (m)
+            {
+                case 0: //smart socket
                     Ginfo = AsyncContext.Run(() => genericSwitch.Get());
                     break;
                 case 1: //smart light
                     Ginfo = AsyncContext.Run(() => genericLight.Get());
                     break;
             }
-            string jsonOut = JsonConvert.SerializeObject(Ginfo, Formatting.Indented);
-            MessageBox.Show(jsonOut, "Information");
+            int idx = 0;
+            int y = 0;
+
+            foreach (KeyValuePair<string, object> i in Ginfo)
+            {
+                addEditorItem(i.Key, i.Value.ToString(), y);
+                y = y + 45;
+                ++idx;
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            updateEditor();
+        }
+
+        private object stringToType(string input)
+        {
+            input = input.ToLower().TrimEnd();
+
+            if (input == "true" || input == "false")
+            {
+                return Convert.ToBoolean(input);
+            }
+
+            if (int.TryParse(input, out _))
+            {
+                return Convert.ToInt32(input);
+            }
+
+            return input;
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            new Thread(() =>
+            {
+                toolStripStatusLabel1.Text = "Sending Data";
+                Dictionary<string, object> sendDic = new Dictionary<string, object>();
+                foreach (Control param in editPanel.Controls)
+                {
+                    bool addToDic = false;
+                    string key = "";
+                    string value = "";
+                    foreach (Control a in param.Controls)
+                    {
+                        if (a is Label)
+                        {
+                            Label label = (Label)a;
+                            key = label.Text;
+                        }
+
+                        if (a is TextBox)
+                        {
+                            TextBox textbox = (TextBox)a;
+                            value = textbox.Text;
+
+                            if (a.Tag.ToString() != value)
+                            {
+                                addToDic = true;
+                            }
+                        }
+                    }
+
+                    if (addToDic)
+                    {
+                        sendDic.Add(key, stringToType(value));
+                    }
+                }
+
+                if (sendDic.Count != 0)
+                {
+                    foreach (var k in sendDic)
+                    {
+                        Dictionary<string, object> tempdic = new Dictionary<string, object>();
+                        tempdic.Add(k.Key, k.Value);
+
+                        int m = socketMode();
+                        switch (m)
+                        {
+                            case 0: //smart socket
+                                AsyncContext.Run(() => genericSwitch.Set(tempdic));
+                                break;
+                            case 1: //smart light
+                                AsyncContext.Run(() => genericLight.Set(tempdic));
+                                break;
+                        }
+                        System.Threading.Thread.Sleep(50);
+                    }
+                }
+                toolStripStatusLabel1.Text = "Idle";
+                this.Invoke(new MethodInvoker(updateEditor));
+            }).Start();
         }
     }
 }
+
