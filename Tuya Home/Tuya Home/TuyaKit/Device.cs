@@ -15,7 +15,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 
-namespace EPPZ.Tuya
+namespace Tuya_Home.Kit
 {
 
     [Serializable]

@@ -66,7 +66,7 @@ namespace Tuya_Home
             macAddress = macAddress.Replace(':', '-').ToLower();
             IPAndMac item = list.SingleOrDefault(x => x.MAC == macAddress);
             if (item == null)
-                return null;
+                return "null";
             return item.IP;
         }
 

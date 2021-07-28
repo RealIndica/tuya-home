@@ -8,7 +8,7 @@
 using System;
 
 
-namespace EPPZ.Tuya
+namespace Tuya_Home.Kit
 {
 
 

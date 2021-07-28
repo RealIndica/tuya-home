@@ -23,6 +23,7 @@ namespace Tuya_Home
         Tuya.TuyaDevice selectedDevice;
         Kit.Devices.GenericLight genericLight;
         Kit.Devices.GenericSwitch genericSwitch;
+        Kit.Device genericDevice;
 
         public Main()
         {
@@ -47,8 +48,16 @@ namespace Tuya_Home
             foreach (Tuya.TuyaDevice dev in tuya.devices.ToList())
             {
                 string ip = IPMacMapper.FindIPFromMacAddress(dev.mac);
-                tuya.devices[idx].ip = ip;
-                listView1.Items[idx].Text = dev.name + "\r\n" + ip;
+                if (ip != "null")
+                {
+                    tuya.devices[idx].ip = ip;
+                    listView1.Items[idx].Text = dev.name + "\r\n" + ip;
+                } else
+                {
+                    tuya.devices[idx].ip = "0.0.0.0";
+                    listView1.Items[idx].Text = dev.name + "\r\n" + "0.0.0.0";
+                }
+
                 idx++;
             }
 
@@ -98,7 +107,7 @@ namespace Tuya_Home
                 return 1;
             }
 
-            return -1;
+            return 2;
         }
 
         private void manageSelected()
@@ -106,6 +115,7 @@ namespace Tuya_Home
             localKeyBox.Text = selectedDevice.localKey;
             devIdBox.Text = selectedDevice.virtualID;
             macBox.Text = selectedDevice.mac;
+            ipBox.Text = selectedDevice.ip;
 
             int m = socketMode();
             switch (m)
@@ -116,7 +126,6 @@ namespace Tuya_Home
                         IP = selectedDevice.ip,
                         devId = selectedDevice.virtualID,
                         localKey = selectedDevice.localKey,
-                        gwId = selectedDevice.virtualID
                     };
                     break;
                 case 1: //smart light
@@ -125,23 +134,44 @@ namespace Tuya_Home
                         IP = selectedDevice.ip,
                         devId = selectedDevice.virtualID,
                         localKey = selectedDevice.localKey,
-                        gwId = selectedDevice.virtualID
+                    };
+                    break;
+                case 2: //Unknown
+                    genericDevice = new Kit.Device
+                    {
+                        IP = selectedDevice.ip,
+                        devId = selectedDevice.virtualID,
+                        localKey = selectedDevice.localKey,
                     };
                     break;
             }
         }
 
+        private void manageButtonInteractivity(bool enabled)
+        {
+            foreach (Control c in this.Controls)
+            {
+                c.Enabled = enabled;
+                foreach (Control d in c.Controls)
+                {
+                    d.Enabled = enabled;
+                }
+            }
+        }
+
         private void Main_Load(object sender, EventArgs e)
         {
+            manageButtonInteractivity(false);
             if (!Debugger.IsAttached)
             {
-                new Thread(() => { loadDevices(); loadIPs(); }).Start();
+                new Thread(() => { loadDevices(); loadIPs(); manageButtonInteractivity(true); }).Start();
             }
             else
             {
                 loadDevices();
                 loadIPs();
-            }
+                manageButtonInteractivity(true);
+            }           
         }
 
         private void menuItem2_Click(object sender, EventArgs e)
@@ -172,6 +202,9 @@ namespace Tuya_Home
                 case 1: //smart light
                     genericLight.ToggleAuto(genericLight);
                     break;
+                case 2: //Generic Device
+                    genericDevice.ToggleAuto(genericDevice);
+                    break;
             }
         }
 
@@ -185,6 +218,9 @@ namespace Tuya_Home
                     break;
                 case 1: //smart light
                     genericLight.TurnOnAuto(genericLight);
+                    break;
+                case 2: //Generic Device
+                    genericDevice.TurnOnAuto(genericDevice);
                     break;
             }
         }
@@ -200,6 +236,9 @@ namespace Tuya_Home
                 case 1: //smart light
                     genericLight.TurnOffAuto(genericLight);
                     break;
+                case 2: //Generic Device
+                    genericDevice.TurnOffAuto(genericDevice);
+                    break;
             }
         }
 
@@ -214,6 +253,9 @@ namespace Tuya_Home
                     break;
                 case 1: //smart light
                     Ginfo = AsyncContext.Run(() => genericLight.Get(true));
+                    break;
+                case 2: //Generic Device
+                    Ginfo = AsyncContext.Run(() => genericDevice.Get(true));
                     break;
             }
             string jsonOut = JsonConvert.SerializeObject(Ginfo, Formatting.Indented);
@@ -248,25 +290,32 @@ namespace Tuya_Home
             editPanel.Controls.Clear();
             editPanel.Update();
 
-            Dictionary<string, object> Ginfo = new Dictionary<string, object>();
-            int m = socketMode();
-            switch (m)
+            if (selectedDevice.ip != "0.0.0.0")
             {
-                case 0: //smart socket
-                    Ginfo = AsyncContext.Run(() => genericSwitch.Get());
-                    break;
-                case 1: //smart light
-                    Ginfo = AsyncContext.Run(() => genericLight.Get());
-                    break;
-            }
-            int idx = 0;
-            int y = 0;
 
-            foreach (KeyValuePair<string, object> i in Ginfo)
-            {
-                addEditorItem(i.Key, i.Value.ToString(), y);
-                y = y + 45;
-                ++idx;
+                Dictionary<string, object> Ginfo = new Dictionary<string, object>();
+                int m = socketMode();
+                switch (m)
+                {
+                    case 0: //smart socket
+                        Ginfo = AsyncContext.Run(() => genericSwitch.Get());
+                        break;
+                    case 1: //smart light
+                        Ginfo = AsyncContext.Run(() => genericLight.Get());
+                        break;
+                    case 2: //Generic Device
+                        Ginfo = AsyncContext.Run(() => genericDevice.Get());
+                        break;
+                }
+                int idx = 0;
+                int y = 0;
+
+                foreach (KeyValuePair<string, object> i in Ginfo)
+                {
+                    addEditorItem(i.Key, i.Value.ToString(), y);
+                    y = y + 45;
+                    ++idx;
+                }
             }
         }
 
@@ -345,6 +394,9 @@ namespace Tuya_Home
                             case 1: //smart light
                                 AsyncContext.Run(() => genericLight.Set(tempdic));
                                 break;
+                            case 2: //Generic Device
+                                AsyncContext.Run(() => genericDevice.Set(tempdic));
+                                break;
                         }
                         System.Threading.Thread.Sleep(50);
                     }
@@ -352,6 +404,46 @@ namespace Tuya_Home
                 toolStripStatusLabel1.Text = "Idle";
                 this.Invoke(new MethodInvoker(updateEditor));
             }).Start();
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            foreach (var device in tuya.devices)
+            {
+                Kit.Device curdev = new Kit.Device {
+                    IP = device.ip,
+                    protocolVersion = "3.3",
+                    localKey = device.localKey,
+                    devId = device.virtualID
+                };
+                if (curdev.IP != "0.0.0.0")
+                {
+                    curdev.TurnOnAuto(curdev);
+                }
+            }
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            foreach (var device in tuya.devices)
+            {
+                Kit.Device curdev = new Kit.Device
+                {
+                    IP = device.ip,
+                    protocolVersion = "3.3",
+                    localKey = device.localKey,
+                    devId = device.virtualID
+                };
+                if (curdev.IP != "0.0.0.0")
+                {
+                    curdev.TurnOffAuto(curdev);
+                };
+            }
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            selectedDevice.ip = ipBox.Text;
         }
     }
 }

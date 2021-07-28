@@ -102,6 +102,7 @@ namespace Tuya_Home
                     return;
                 }
             }
+            button1.Enabled = false;
             string res = cli_wrapper.getDevicesJson(apiKeyInput.Text, apiSecretInput.Text, virtualIDInput.Text);
             
             if (res != "BAD")
@@ -114,6 +115,7 @@ namespace Tuya_Home
             {
                 MessageBox.Show("You have entered some information correctly or you have no added devices!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            button1.Enabled = true;
         }
 
         private void Connect_Load(object sender, EventArgs e)
