@@ -24,6 +24,12 @@ namespace Tuya_Home
         Kit.Devices.GenericLight genericLight;
         Kit.Devices.GenericSwitch genericSwitch;
         Kit.Device genericDevice;
+        Kit.Devices.RoboHoover genericRoboHoover;
+
+        Keys currentMove;
+        bool keyDown = false;
+
+        bool loaded = false;
 
         public Main()
         {
@@ -52,7 +58,8 @@ namespace Tuya_Home
                 {
                     tuya.devices[idx].ip = ip;
                     listView1.Items[idx].Text = dev.name + "\r\n" + ip;
-                } else
+                }
+                else
                 {
                     tuya.devices[idx].ip = "0.0.0.0";
                     listView1.Items[idx].Text = dev.name + "\r\n" + "0.0.0.0";
@@ -62,6 +69,7 @@ namespace Tuya_Home
             }
 
             toolStripStatusLabel1.Text = "Idle";
+            loaded = true;
         }
 
 
@@ -106,8 +114,12 @@ namespace Tuya_Home
             {
                 return 1;
             }
+            else if (selectedDevice.product_name.ToLower().Contains("coredy"))
+            {
+                return 2;
+            }
 
-            return 2;
+            return -1;
         }
 
         private void manageSelected()
@@ -127,6 +139,8 @@ namespace Tuya_Home
                         devId = selectedDevice.virtualID,
                         localKey = selectedDevice.localKey,
                     };
+                    genericSwitch.Derived = genericSwitch;
+                    listView1.SelectedItems[0].Tag = genericSwitch.getBase();
                     break;
                 case 1: //smart light
                     genericLight = new Kit.Devices.GenericLight
@@ -135,16 +149,36 @@ namespace Tuya_Home
                         devId = selectedDevice.virtualID,
                         localKey = selectedDevice.localKey,
                     };
+                    genericLight.Derived = genericLight;
+                    listView1.SelectedItems[0].Tag = genericLight.getBase();
                     break;
-                case 2: //Unknown
+                case 2: //robo hoover
+                    genericRoboHoover = new Kit.Devices.RoboHoover
+                    {
+                        IP = selectedDevice.ip,
+                        devId = selectedDevice.virtualID,
+                        localKey = selectedDevice.localKey,
+                    };
+                    genericRoboHoover.Derived = genericRoboHoover;
+                    listView1.SelectedItems[0].Tag = genericRoboHoover.getBase();
+                    break;
+                case -1: //unknown
                     genericDevice = new Kit.Device
                     {
                         IP = selectedDevice.ip,
                         devId = selectedDevice.virtualID,
                         localKey = selectedDevice.localKey,
                     };
+                    genericDevice.Derived = genericDevice;
+                    listView1.SelectedItems[0].Tag = genericDevice.getBase();
                     break;
             }
+        }
+
+        private void updateDeviceControls()
+        {
+            ControlPanel.Controls.Clear();
+            currentDevice().GenerateForm(ControlPanel);
         }
 
         private void manageButtonInteractivity(bool enabled)
@@ -171,7 +205,7 @@ namespace Tuya_Home
                 loadDevices();
                 loadIPs();
                 manageButtonInteractivity(true);
-            }           
+            }
         }
 
         private void menuItem2_Click(object sender, EventArgs e)
@@ -188,76 +222,35 @@ namespace Tuya_Home
                 selectedLabel.Text = selectedDevice.name;
                 manageSelected();
                 updateEditor();
+                updateDeviceControls();
             }
+        }
+
+        private Kit.Device currentDevice()
+        {
+            Kit.Device obj = (Kit.Device)listView1.SelectedItems[0].Tag;
+            return obj;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            int m = socketMode();
-            switch (m)
-            {
-                case 0: //smart socket
-                    genericSwitch.ToggleAuto(genericSwitch);
-                    break;
-                case 1: //smart light
-                    genericLight.ToggleAuto(genericLight);
-                    break;
-                case 2: //Generic Device
-                    genericDevice.ToggleAuto(genericDevice);
-                    break;
-            }
+            currentDevice().ToggleAuto(currentDevice());
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            int m = socketMode();
-            switch (m)
-            {
-                case 0: //smart socket
-                    genericSwitch.TurnOnAuto(genericSwitch);
-                    break;
-                case 1: //smart light
-                    genericLight.TurnOnAuto(genericLight);
-                    break;
-                case 2: //Generic Device
-                    genericDevice.TurnOnAuto(genericDevice);
-                    break;
-            }
+            currentDevice().TurnOnAuto(currentDevice());
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
-            int m = socketMode();
-            switch (m)
-            {
-                case 0: //smart socket
-                    genericSwitch.TurnOffAuto(genericSwitch);
-                    break;
-                case 1: //smart light
-                    genericLight.TurnOffAuto(genericLight);
-                    break;
-                case 2: //Generic Device
-                    genericDevice.TurnOffAuto(genericDevice);
-                    break;
-            }
+            currentDevice().TurnOffAuto(currentDevice());
         }
 
         private void button4_Click(object sender, EventArgs e)
         {
             Dictionary<string, object> Ginfo = new Dictionary<string, object>();
-            int m = socketMode();
-            switch (m)
-            {
-                case 0: //smart socket
-                    Ginfo = AsyncContext.Run(() => genericSwitch.Get(true));
-                    break;
-                case 1: //smart light
-                    Ginfo = AsyncContext.Run(() => genericLight.Get(true));
-                    break;
-                case 2: //Generic Device
-                    Ginfo = AsyncContext.Run(() => genericDevice.Get(true));
-                    break;
-            }
+            Ginfo = AsyncContext.Run(() => currentDevice().Get(true));
             string jsonOut = JsonConvert.SerializeObject(Ginfo, Formatting.Indented);
             MessageBox.Show(jsonOut, "Information");
         }
@@ -294,19 +287,8 @@ namespace Tuya_Home
             {
 
                 Dictionary<string, object> Ginfo = new Dictionary<string, object>();
-                int m = socketMode();
-                switch (m)
-                {
-                    case 0: //smart socket
-                        Ginfo = AsyncContext.Run(() => genericSwitch.Get());
-                        break;
-                    case 1: //smart light
-                        Ginfo = AsyncContext.Run(() => genericLight.Get());
-                        break;
-                    case 2: //Generic Device
-                        Ginfo = AsyncContext.Run(() => genericDevice.Get());
-                        break;
-                }
+                Ginfo = AsyncContext.Run(() => currentDevice().Get());
+
                 int idx = 0;
                 int y = 0;
 
@@ -326,19 +308,20 @@ namespace Tuya_Home
 
         private object stringToType(string input)
         {
+            string realInput = input.TrimEnd();
             input = input.ToLower().TrimEnd();
 
             if (input == "true" || input == "false")
             {
-                return Convert.ToBoolean(input);
+                return Convert.ToBoolean(realInput);
             }
 
             if (int.TryParse(input, out _))
             {
-                return Convert.ToInt32(input);
+                return Convert.ToInt32(realInput);
             }
 
-            return input;
+            return realInput;
         }
 
         private void button6_Click(object sender, EventArgs e)
@@ -384,20 +367,7 @@ namespace Tuya_Home
                     {
                         Dictionary<string, object> tempdic = new Dictionary<string, object>();
                         tempdic.Add(k.Key, k.Value);
-
-                        int m = socketMode();
-                        switch (m)
-                        {
-                            case 0: //smart socket
-                                AsyncContext.Run(() => genericSwitch.Set(tempdic));
-                                break;
-                            case 1: //smart light
-                                AsyncContext.Run(() => genericLight.Set(tempdic));
-                                break;
-                            case 2: //Generic Device
-                                AsyncContext.Run(() => genericDevice.Set(tempdic));
-                                break;
-                        }
+                        AsyncContext.Run(() => currentDevice().Set(tempdic));
                         System.Threading.Thread.Sleep(50);
                     }
                 }
@@ -410,7 +380,8 @@ namespace Tuya_Home
         {
             foreach (var device in tuya.devices)
             {
-                Kit.Device curdev = new Kit.Device {
+                Kit.Device curdev = new Kit.Device
+                {
                     IP = device.ip,
                     protocolVersion = "3.3",
                     localKey = device.localKey,
@@ -444,6 +415,77 @@ namespace Tuya_Home
         private void button9_Click(object sender, EventArgs e)
         {
             selectedDevice.ip = ipBox.Text;
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            new Thread(() =>
+            {
+                toolStripStatusLabel1.Text = "Sending Data";
+                Dictionary<string, object> sendDic = new Dictionary<string, object>();
+                foreach (Control param in editPanel.Controls)
+                {
+                    string key = "";
+                    string value = "";
+                    foreach (Control a in param.Controls)
+                    {
+                        if (a is Label)
+                        {
+                            Label label = (Label)a;
+                            key = label.Text;
+                        }
+
+                        if (a is TextBox)
+                        {
+                            TextBox textbox = (TextBox)a;
+                            value = textbox.Text;
+                        }
+                    }
+                    sendDic.Add(key, stringToType(value));
+                }
+
+                AsyncContext.Run(() => currentDevice().Set(sendDic));
+
+                toolStripStatusLabel1.Text = "Idle";
+                this.Invoke(new MethodInvoker(updateEditor));
+            }).Start();
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            keyDown = true;
+            if (loaded)
+            {
+                if (selectedDevice.name.ToLower().Contains("coredy"))
+                {
+                    if (keyData == Keys.Up) //Move forward
+                    {
+                        currentMove = keyData;
+                        return true;
+                    }
+
+                    if (keyData == Keys.Down) //Move backward
+                    {
+                        currentMove = keyData;
+                        return true;
+                    }
+
+                    if (keyData == Keys.Left) //Move left
+                    {
+                        currentMove = keyData;
+                        return true;
+                    }
+
+                    if (keyData == Keys.Right) //Move right
+                    {
+                        currentMove = keyData;
+                        return true;
+                    }
+                }
+            }
+            keyDown = false;
+            // Call the base class
+            return base.ProcessCmdKey(ref msg, keyData);
         }
     }
 }

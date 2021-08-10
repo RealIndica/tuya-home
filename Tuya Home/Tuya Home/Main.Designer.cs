@@ -39,10 +39,14 @@ namespace Tuya_Home
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.button10 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
             this.editPanel = new System.Windows.Forms.Panel();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.button9 = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
+            this.ipBox = new System.Windows.Forms.TextBox();
             this.button4 = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.macBox = new System.Windows.Forms.TextBox();
@@ -58,9 +62,8 @@ namespace Tuya_Home
             this.button1 = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.selectedLabel = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.ipBox = new System.Windows.Forms.TextBox();
-            this.button9 = new System.Windows.Forms.Button();
+            this.ControlPanel = new System.Windows.Forms.Panel();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -68,6 +71,7 @@ namespace Tuya_Home
             this.groupBox3.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.groupBox5.SuspendLayout();
             this.SuspendLayout();
             // 
             // listView1
@@ -77,7 +81,7 @@ namespace Tuya_Home
             this.listView1.Location = new System.Drawing.Point(12, 12);
             this.listView1.MultiSelect = false;
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(546, 549);
+            this.listView1.Size = new System.Drawing.Size(546, 560);
             this.listView1.TabIndex = 0;
             this.listView1.TileSize = new System.Drawing.Size(128, 128);
             this.listView1.UseCompatibleStateImageBehavior = false;
@@ -114,7 +118,7 @@ namespace Tuya_Home
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 570);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 575);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(982, 22);
             this.statusStrip1.TabIndex = 2;
@@ -129,32 +133,44 @@ namespace Tuya_Home
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.groupBox4);
+            this.groupBox1.Controls.Add(this.groupBox5);
             this.groupBox1.Controls.Add(this.groupBox3);
             this.groupBox1.Controls.Add(this.groupBox2);
             this.groupBox1.Controls.Add(this.panel1);
             this.groupBox1.Controls.Add(this.pictureBox1);
             this.groupBox1.Location = new System.Drawing.Point(564, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(406, 549);
+            this.groupBox1.Size = new System.Drawing.Size(406, 560);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Manage";
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.button10);
             this.groupBox4.Controls.Add(this.button6);
             this.groupBox4.Controls.Add(this.button5);
             this.groupBox4.Controls.Add(this.editPanel);
             this.groupBox4.Location = new System.Drawing.Point(6, 221);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(177, 322);
+            this.groupBox4.Size = new System.Drawing.Size(177, 333);
             this.groupBox4.TabIndex = 7;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Parameter Editor";
             // 
+            // button10
+            // 
+            this.button10.Location = new System.Drawing.Point(7, 299);
+            this.button10.Name = "button10";
+            this.button10.Size = new System.Drawing.Size(164, 23);
+            this.button10.TabIndex = 3;
+            this.button10.Text = "Set All";
+            this.button10.UseVisualStyleBackColor = true;
+            this.button10.Click += new System.EventHandler(this.button10_Click);
+            // 
             // button6
             // 
-            this.button6.Location = new System.Drawing.Point(96, 293);
+            this.button6.Location = new System.Drawing.Point(96, 270);
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(75, 23);
             this.button6.TabIndex = 2;
@@ -164,7 +180,7 @@ namespace Tuya_Home
             // 
             // button5
             // 
-            this.button5.Location = new System.Drawing.Point(7, 293);
+            this.button5.Location = new System.Drawing.Point(7, 270);
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(75, 23);
             this.button5.TabIndex = 1;
@@ -177,7 +193,7 @@ namespace Tuya_Home
             this.editPanel.AutoScroll = true;
             this.editPanel.Location = new System.Drawing.Point(6, 15);
             this.editPanel.Name = "editPanel";
-            this.editPanel.Size = new System.Drawing.Size(165, 272);
+            this.editPanel.Size = new System.Drawing.Size(165, 249);
             this.editPanel.TabIndex = 0;
             // 
             // groupBox3
@@ -198,6 +214,32 @@ namespace Tuya_Home
             this.groupBox3.TabIndex = 6;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Information";
+            // 
+            // button9
+            // 
+            this.button9.Location = new System.Drawing.Point(140, 151);
+            this.button9.Name = "button9";
+            this.button9.Size = new System.Drawing.Size(65, 20);
+            this.button9.TabIndex = 14;
+            this.button9.Text = "Set";
+            this.button9.UseVisualStyleBackColor = true;
+            this.button9.Click += new System.EventHandler(this.button9_Click);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(90, 135);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(17, 13);
+            this.label1.TabIndex = 15;
+            this.label1.Text = "IP";
+            // 
+            // ipBox
+            // 
+            this.ipBox.Location = new System.Drawing.Point(6, 151);
+            this.ipBox.Name = "ipBox";
+            this.ipBox.Size = new System.Drawing.Size(128, 20);
+            this.ipBox.TabIndex = 14;
             // 
             // button4
             // 
@@ -344,37 +386,29 @@ namespace Tuya_Home
             this.selectedLabel.Text = "Nothing Selected";
             this.selectedLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // label1
+            // ControlPanel
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(90, 135);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(17, 13);
-            this.label1.TabIndex = 15;
-            this.label1.Text = "IP";
+            this.ControlPanel.AutoScroll = true;
+            this.ControlPanel.Location = new System.Drawing.Point(6, 19);
+            this.ControlPanel.Name = "ControlPanel";
+            this.ControlPanel.Size = new System.Drawing.Size(199, 214);
+            this.ControlPanel.TabIndex = 8;
             // 
-            // ipBox
+            // groupBox5
             // 
-            this.ipBox.Location = new System.Drawing.Point(6, 151);
-            this.ipBox.Name = "ipBox";
-            this.ipBox.Size = new System.Drawing.Size(128, 20);
-            this.ipBox.TabIndex = 14;
-            // 
-            // button9
-            // 
-            this.button9.Location = new System.Drawing.Point(140, 151);
-            this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(65, 20);
-            this.button9.TabIndex = 14;
-            this.button9.Text = "Set";
-            this.button9.UseVisualStyleBackColor = true;
-            this.button9.Click += new System.EventHandler(this.button9_Click);
+            this.groupBox5.Controls.Add(this.ControlPanel);
+            this.groupBox5.Location = new System.Drawing.Point(189, 315);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(211, 239);
+            this.groupBox5.TabIndex = 4;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Device Control";
             // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(982, 592);
+            this.ClientSize = new System.Drawing.Size(982, 597);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.listView1);
@@ -394,6 +428,7 @@ namespace Tuya_Home
             this.groupBox3.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
+            this.groupBox5.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -432,5 +467,8 @@ namespace Tuya_Home
         private System.Windows.Forms.Button button9;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox ipBox;
+        private System.Windows.Forms.Button button10;
+        private System.Windows.Forms.Panel ControlPanel;
+        private System.Windows.Forms.GroupBox groupBox5;
     }
 }

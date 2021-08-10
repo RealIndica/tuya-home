@@ -128,6 +128,7 @@
     <Compile Include="TuyaKit\Device.cs" />
     <Compile Include="TuyaKit\Devices\GenericLight.cs" />
     <Compile Include="TuyaKit\Devices\GenericPlug.cs" />
+    <Compile Include="TuyaKit\Devices\RoboHoover.cs" />
     <Compile Include="TuyaKit\Log.cs" />
     <Compile Include="TuyaKit\Request.cs" />
     <EmbeddedResource Include="Connect.resx">

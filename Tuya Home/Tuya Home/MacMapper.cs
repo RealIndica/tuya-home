@@ -4,6 +4,8 @@ using System.IO;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Tuya_Home
 {
@@ -28,10 +30,26 @@ namespace Tuya_Home
             return process.StandardOutput;
         }
 
+        private static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new Exception("No network adapters with an IPv4 address in the system!");
+        }
+
         private static void initArpTable()
         {
             if (!initArp)
             {
+                string ip = GetLocalIPAddress();
+                int idx = ip.LastIndexOf('.');
+                string formatted = ip.Substring(0, idx);
                 var initStream = ExecuteCommandLine(Environment.CurrentDirectory + "//bin//arpPopulate.bat", "");
                 System.Threading.Thread.Sleep(2000);
                 initArp = true;

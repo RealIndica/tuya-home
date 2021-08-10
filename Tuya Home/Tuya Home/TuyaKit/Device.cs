@@ -10,10 +10,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Linq;
-
+using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
+using System.Drawing;
+using System.Reflection;
 
 namespace Tuya_Home.Kit
 {
@@ -31,6 +32,10 @@ namespace Tuya_Home.Kit
         public string devId;
         public string productId;
         public string localKey;
+
+        public object Derived;
+
+
 
 
         #region Accessors
@@ -140,5 +145,43 @@ namespace Tuya_Home.Kit
         }
 
         #endregion
+
+        public Device getBase()
+        {
+            return (Device)this;
+        }
+
+        public void addEditorItem(string value, int y, Panel editPanel, MethodInfo method, object inst)
+        {
+            Button btn = new Button();
+            btn.Location = new Point(0, y);
+
+            btn.Size = new Size(editPanel.Size.Width - 20, btn.Size.Height);
+
+            btn.Text = value;
+            btn.Tag = value;
+
+            btn.Click += new EventHandler(delegate (object o, EventArgs a) { method.Invoke(inst, null); });
+
+            editPanel.Controls.Add(btn);
+        }
+
+        public void GenerateForm(Panel TargetControl)
+        {
+            int idx = 0;
+            int y = 0;
+
+            foreach (var method in Derived.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+            {
+                if (method.Name != "GenerateForm" && method.GetParameters().Length == 0)
+                {
+                    string currentMethodName = method.Name;
+                    Console.WriteLine(currentMethodName);
+                    addEditorItem(currentMethodName, y, TargetControl, method, Derived);
+                    y = y + 25;
+                    ++idx;
+                }
+            }
+        }
     }
 }
