@@ -9,39 +9,6 @@ namespace Tuya_Home.Kit.Devices
 	[Serializable]
 	public class GenericLight : Device
 	{
-
-
-		public async Task<bool> GetIsOn()
-		{
-			Dictionary<string, object> dps = await Get();
-			if (dps.ContainsKey("1")) return (bool)dps["1"];
-			return false;
-		}
-
-		public async void TurnOff()
-		{
-			Dictionary<string, object> response = await Set(
-				new Dictionary<string, object>
-				{
-					["1"] = false
-				}
-			);
-
-			Log.Format("response: `{0}`", response);
-		}
-
-		public async void TurnOn()
-		{
-			Dictionary<string, object> response = await Set(
-				new Dictionary<string, object>
-				{
-					["1"] = true
-				}
-			);
-
-			Log.Format("response: `{0}`", response);
-		}
-
 		public async void setColour(int R, int G, int B)
 		{
 			Dictionary<string, object> response;
@@ -85,16 +52,6 @@ namespace Tuya_Home.Kit.Devices
 			);
 
 			Log.Format("response: `{0}`", response);
-		}
-
-		public async void Toggle()
-		{
-			Dictionary<string, object> dps = await Get();
-			if (dps.ContainsKey("1"))
-			{
-				bool isOn = (bool)dps["1"];
-				if (isOn) TurnOff(); else TurnOn();
-			}
 		}
 	}
 }
