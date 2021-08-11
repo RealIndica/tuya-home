@@ -24,7 +24,6 @@ namespace Tuya_Home
             startInfo.RedirectStandardOutput = true;
             startInfo.FileName = file;
             startInfo.Arguments = arguments;
-
             Process process = Process.Start(startInfo);
 
             return process.StandardOutput;
@@ -50,7 +49,7 @@ namespace Tuya_Home
                 string ip = GetLocalIPAddress();
                 int idx = ip.LastIndexOf('.');
                 string formatted = ip.Substring(0, idx);
-                var initStream = ExecuteCommandLine(Environment.CurrentDirectory + "//bin//arpPopulate.bat", "");
+                var initStream = ExecuteCommandLine(Environment.CurrentDirectory + "//bin//arpPopulate.bat", formatted);
                 System.Threading.Thread.Sleep(2000);
                 initArp = true;
             }

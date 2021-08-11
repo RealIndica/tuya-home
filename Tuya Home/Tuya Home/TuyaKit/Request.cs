@@ -27,27 +27,21 @@ namespace Tuya_Home.Kit
         int headerSize = 16;
 
         // Packet protocol from https://github.com/codetheweb/tuyapi/wiki/Packet-Structure
-        byte[] prefixBytes = new byte[] { 0x00, 0x00, 0x55, 0xaa };
-        byte[] versionBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 };
-        byte[] commandBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 };
-        byte[] payloadLengthBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 };
-        byte[] payloadLengthBytesReq = new byte[] { 0x00, 0x00, 0x00, 0x00 };
-        byte[] spacingBytes = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-        byte[] ver33Bytes = new byte[] { 0x33, 0x2e, 0x33 };
+        public byte[] prefixBytes = new byte[] { 0x00, 0x00, 0x55, 0xaa };
+        public byte[] versionBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+        public byte[] commandBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+        public byte[] payloadLengthBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+        public byte[] payloadLengthBytesReq = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+        public byte[] spacingBytes = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        public byte[] ver33Bytes = new byte[] { 0x33, 0x2e, 0x33 };
 
         // Payload (data, checksum, suffix).
-        byte[] checksumBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 };
-        byte[] suffixBytes = new byte[] { 0x00, 0x00, 0xaa, 0x55 };
+        public byte[] checksumBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+        public byte[] suffixBytes = new byte[] { 0x00, 0x00, 0xaa, 0x55 };
 
-        // Command values from https://github.com/codetheweb/tuyapi/wiki/TUYA-Commands
-        public enum Command
-        {
-            SetStatus = 0x07,
-            GetStatus = 0x0a,
-            GetSSIDList = 0x0b
-        }
+        
 
-        private byte[] SubArray(byte[] array, int startIndex, int endIndex)
+        public byte[] SubArray(byte[] array, int startIndex, int endIndex)
         {
             byte[] result = new byte[endIndex - startIndex];
             Array.Copy(array, startIndex, result, 0, endIndex - startIndex);
@@ -95,24 +89,28 @@ namespace Tuya_Home.Kit
 
         public async Task<byte[]> SendPacketToDevice(byte[] packetBytes, Device device)
         {
+            int maxRetry = 3;
+            int currentRetry = 1;
+
             bool dataSuccess = false;
         START:
-            Log.Format("Request.SendDataToDevice(), packetBytes.Length: `{0}`", packetBytes.Length);
+            Log.Format("Request.SendDataToDevice() Attempt " +  currentRetry.ToString() + "/" + maxRetry +", packetBytes.Length: `{0}`", packetBytes.Length);
 
             TcpClient tcpClient = new TcpClient();
-            while (!tcpClient.Connected)
-            {
-                try
-                {
-                    tcpClient.Connect(device.IP, device.port);
-                }
-                catch (Exception) { }
-            }
+
+            tcpClient.SendTimeout = 2000;
+            tcpClient.ReceiveTimeout = 2000;
+
+            tcpClient.Connect(device.IP, device.port);
+
             byte[] responseStream;
             using (tcpClient)
             using (NetworkStream networkStream = tcpClient.GetStream())
             using (MemoryStream responseMemoryStream = new MemoryStream())
             {
+                networkStream.ReadTimeout = 2000;
+                networkStream.WriteTimeout = 2000;
+
                 try
                 {
                     // Write request.
@@ -136,7 +134,15 @@ namespace Tuya_Home.Kit
             if (!dataSuccess)
             {
                 System.Threading.Thread.Sleep(100);
-                goto START;
+                currentRetry++;
+                if (currentRetry <= maxRetry)
+                {
+                    goto START;
+                } 
+                else
+                {
+                    responseStream = new byte[] { 0x00 };
+                }
             }
             tcpClient.Close();
             tcpClient.Dispose();
@@ -190,7 +196,7 @@ namespace Tuya_Home.Kit
             return true;
         }
 
-        protected string DataStringFromPacket(byte[] packetBytes, Device dev)
+        public string DataStringFromPacket(byte[] packetBytes, Device dev)
         {
             if (dev.protocolVersion == "3.1")
             {
@@ -207,7 +213,7 @@ namespace Tuya_Home.Kit
                 string packetDataString = Encoding.UTF8.GetString(packetDataBytesWithoutLeadingZeroes);
 
                 return packetDataString;
-            } 
+            }
             else
             {
                 // Remove prefix and suffix
@@ -297,7 +303,7 @@ namespace Tuya_Home.Kit
                     memoryStream.Write(commandBytes, 0, commandBytes.Length);
 
                     //Add 3.3 header
-                    if (command == Command.SetStatus)
+                    if (command != Command.DP_QUERY && command != Command.DP_QUERY_NEW && command != Command.DP_REFRESH)
                     {
                         memoryStream.Write(payloadLengthBytes, 0, payloadLengthBytes.Length);
                         memoryStream.Write(ver33Bytes, 0, ver33Bytes.Length);
@@ -329,7 +335,7 @@ namespace Tuya_Home.Kit
         #region Encryption
 
         // From https://github.com/codetheweb/tuyapi/blob/master/index.js#L300
-        byte[] Encrypt(string JSON, Device device)
+        public byte[] Encrypt(string JSON, Device device)
         {
             Log.Format("Data.Encrypt()");
 
@@ -370,7 +376,7 @@ namespace Tuya_Home.Kit
             return Encoding.UTF8.GetBytes($"{device.protocolVersion}{hashString}{encryptedJSON}");
         }
 
-        string Decrypt(byte[] data, Device device)
+        public string Decrypt(byte[] data, Device device)
         {
             Log.Format("Data.Decrypt()");
 

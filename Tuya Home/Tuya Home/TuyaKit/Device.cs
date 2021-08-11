@@ -40,10 +40,16 @@ namespace Tuya_Home.Kit
 
         #region Accessors
 
-        public async Task<Dictionary<string, object>> Get(bool schema = false)
+        public async Task<Dictionary<string, object>> Get(bool schema = false, Dictionary<string, object> dps = null)
         {
             int epoch = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
             Dictionary<string, object> nulldps = new Dictionary<string, object>();
+
+            if (dps == null)
+            {
+                dps = nulldps;
+            }
+
             // Get the response.
             JObject response;
             if (!schema)
@@ -54,10 +60,10 @@ namespace Tuya_Home.Kit
                     ["gwId"] = this.devId,
                     ["devId"] = this.devId,
                     ["t"] = epoch,
-                    ["dps"] = nulldps,
+                    ["dps"] = dps,
                     ["uid"] = this.devId
                 },
-                Request.Command.GetStatus,
+                Command.DP_QUERY,
                 this, true);
                 return response["dps"].ToObject<Dictionary<string, object>>();
             }
@@ -69,11 +75,11 @@ namespace Tuya_Home.Kit
                     ["gwId"] = this.devId,
                     ["devId"] = this.devId,
                     ["t"] = epoch,
-                    ["dps"] = nulldps,
+                    ["dps"] = dps,
                     ["uid"] = this.devId,
                     ["schema"] = true
                 },
-                Request.Command.GetStatus,
+                Command.DP_QUERY,
                 this, true);
                 return response.ToObject<Dictionary<string, object>>();
             }
@@ -92,11 +98,32 @@ namespace Tuya_Home.Kit
                     ["t"] = epoch,
                     ["dps"] = dps
                 },
-                Request.Command.SetStatus,
+                Command.CONTROL,
                 this,
                 true);
 
             // Return (if any).
+            return response.ToObject<Dictionary<string, object>>();
+        }
+
+        public async Task<Dictionary<string, object>> Send(Command cmd)
+        {
+            int epoch = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
+            Dictionary<string, object> nulldps = new Dictionary<string, object>();
+            // Get the response.
+            JObject response;
+
+            response = await new Request().SendJSONObjectForCommandToDevice(
+            new Dictionary<string, object>
+            {
+                ["gwId"] = this.devId,
+                ["devId"] = this.devId,
+                ["t"] = epoch,
+                ["dps"] = nulldps,
+                ["uid"] = this.devId
+            },
+            cmd,
+            this, true);
             return response.ToObject<Dictionary<string, object>>();
         }
 
@@ -176,7 +203,6 @@ namespace Tuya_Home.Kit
                 if (method.Name != "GenerateForm" && method.GetParameters().Length == 0)
                 {
                     string currentMethodName = method.Name;
-                    Console.WriteLine(currentMethodName);
                     addEditorItem(currentMethodName, y, TargetControl, method, Derived);
                     y = y + 25;
                     ++idx;

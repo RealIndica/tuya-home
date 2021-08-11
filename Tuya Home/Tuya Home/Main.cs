@@ -13,6 +13,8 @@ using System.IO;
 using System.Net;
 using Nito.AsyncEx;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Microsoft.VisualBasic;
 
 namespace Tuya_Home
 {
@@ -26,10 +28,10 @@ namespace Tuya_Home
         Kit.Device genericDevice;
         Kit.Devices.RoboHoover genericRoboHoover;
 
-        Keys currentMove;
-        bool keyDown = false;
-
         bool loaded = false;
+
+        [DllImport("user32.dll")]
+        public static extern short GetAsyncKeyState(int key);
 
         public Main()
         {
@@ -193,12 +195,24 @@ namespace Tuya_Home
             }
         }
 
+        private void loadCommands()
+        {
+            var values = Enum.GetValues(typeof(Kit.Command));
+            foreach (Kit.Command c in values)
+            {
+                comboBox1.Items.Add(Enum.GetName(typeof(Kit.Command), c));
+            }
+
+            comboBox1.SelectedIndex = 0;
+        }
+
         private void Main_Load(object sender, EventArgs e)
         {
             manageButtonInteractivity(false);
+            loadCommands();
             if (!Debugger.IsAttached)
             {
-                new Thread(() => { loadDevices(); loadIPs(); manageButtonInteractivity(true); }).Start();
+                new Thread(() => { loadDevices(); loadIPs(); manageButtonInteractivity(true); movementController(); }).Start();
             }
             else
             {
@@ -451,42 +465,248 @@ namespace Tuya_Home
             }).Start();
         }
 
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        private Keys currentMove;
+        private Keys lastMove;
+        private bool keyDown = false;
+
+        private void processMove(bool stop = false)
         {
-            keyDown = true;
-            if (loaded)
+            if (stop)
             {
-                if (selectedDevice.name.ToLower().Contains("coredy"))
+                currentMove = Keys.None;
+            }
+            if (currentMove != lastMove)
+            {
+                switch (currentMove)
                 {
-                    if (keyData == Keys.Up) //Move forward
-                    {
-                        currentMove = keyData;
-                        return true;
-                    }
+                    case Keys.Up:
+                        genericRoboHoover.MoveForward();
+                        break;
+                    case Keys.Down:
+                        genericRoboHoover.MoveBackward();
+                        break;
+                    case Keys.Left:
+                        genericRoboHoover.MoveLeft();
+                        break;
+                    case Keys.Right:
+                        genericRoboHoover.MoveRight();
+                        break;
+                    case Keys.None:
+                        genericRoboHoover.Stop();
+                        break;
+                }
 
-                    if (keyData == Keys.Down) //Move backward
-                    {
-                        currentMove = keyData;
-                        return true;
-                    }
+            }
 
-                    if (keyData == Keys.Left) //Move left
-                    {
-                        currentMove = keyData;
-                        return true;
-                    }
+            lastMove = currentMove;
+        }
 
-                    if (keyData == Keys.Right) //Move right
+        private bool readytoControl()
+        {
+            try
+            {
+                if (loaded && Form.ActiveForm == this)
+                {
+                    if (selectedDevice != null)
                     {
-                        currentMove = keyData;
-                        return true;
+                        if (selectedDevice.name.ToLower().Contains("coredy"))
+                        {
+                            return true;
+                        }
                     }
                 }
             }
-            keyDown = false;
-            // Call the base class
-            return base.ProcessCmdKey(ref msg, keyData);
+            catch { }
+
+            return false;
+        }
+
+        private void movementController()
+        {
+            while (true)
+            {
+                System.Threading.Thread.Sleep(10);
+                try
+                {
+                    if (readytoControl())
+                    {
+                        if ((GetAsyncKeyState((int)Keys.Up) & 0x8000) > 0) //up
+                        {
+                            keyDown = true;
+                            currentMove = Keys.Up;
+                        }
+                        else if ((GetAsyncKeyState((int)Keys.Down) & 0x8000) > 0) //down
+                        {
+                            keyDown = true;
+                            currentMove = Keys.Down;
+                        }
+                        else if ((GetAsyncKeyState((int)Keys.Left) & 0x8000) > 0) //left
+                        {
+                            keyDown = true;
+                            currentMove = Keys.Left;
+                        }
+                        else if ((GetAsyncKeyState((int)Keys.Right) & 0x8000) > 0) //right
+                        {
+                            keyDown = true;
+                            currentMove = Keys.Right;
+                        }
+                        else //stop
+                        {
+                            keyDown = false;
+                        }
+                        processMove(!keyDown);
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private void Main_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Environment.Exit(0);
+        }
+
+        private void listView1_KeyDown(object sender, KeyEventArgs e)
+        {
+            e.Handled = true;
+        }
+
+        private Kit.Command getEnumFromComboBox()
+        {
+            string selected = comboBox1.Text;
+            var values = Enum.GetValues(typeof(Kit.Command));
+            foreach (Kit.Command c in values)
+            {
+                string cur = Enum.GetName(typeof(Kit.Command), c);
+
+                if (cur == selected)
+                {
+                    return c;
+                }
+            }
+
+            return Kit.Command.DP_QUERY;
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Dictionary<string, object> Ginfo = new Dictionary<string, object>();
+                Ginfo = AsyncContext.Run(() => currentDevice().Send(getEnumFromComboBox()));
+                string jsonOut = JsonConvert.SerializeObject(Ginfo, Formatting.Indented);
+                MessageBox.Show(jsonOut, "Result");
+            }
+            catch { }
+        }
+
+        private void menuItem4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void menuItem5_Click(object sender, EventArgs e)
+        {
+            string placeholder = "0000000000000000000000000000000000000000000000000000000000000000";
+            string inputBytesString = Microsoft.VisualBasic.Interaction.InputBox("Enter Bytes", "Decode Payload Bytes", placeholder);
+            if (inputBytesString != placeholder)
+            {
+                IEnumerable<string> strbytes = inputBytesString.ToLower().SplitInParts(2);
+                List<byte> newBytes = new List<byte>();
+                foreach (string s in strbytes)
+                {
+                    newBytes.Add(byte.Parse(s, System.Globalization.NumberStyles.HexNumber));
+                }
+                string decoded = placeholder;
+
+                Kit.Request req = new Kit.Request();
+
+                try
+                {
+                    decoded = req.Decrypt(newBytes.ToArray(), currentDevice());
+                }
+                catch { }
+
+                decoded += "\r\n\r\n" + newBytes.Count.ToString() + " bytes";
+
+                MessageBox.Show(decoded, "Result");
+            }
+        }
+
+        private void menuItem7_Click(object sender, EventArgs e)
+        {
+            string input = Microsoft.VisualBasic.Interaction.InputBox("Enter DPS", "DPS Set", "Key:Value");
+            if (input != "Key:Value")
+            {
+                try
+                {
+                    string Key = input.Split(':')[0];
+                    object Value = stringToType(input.Split(':')[1]);
+
+                    Dictionary<string, object> send = new Dictionary<string, object>();
+                    send.Add(Key, Value);
+                    AsyncContext.Run(() => currentDevice().Set(send));
+                    updateEditor();
+                }
+                catch { }
+            }
+        }
+
+        private void menuItem8_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        enum BruteMode
+        {
+            boolTrue = 0,
+            boolFalse = 1,
+            randomNumber = 2
+        }
+
+        private void dpsBrute(BruteMode b)
+        {
+            Random rnd = new Random();
+            new Thread(() => {
+
+                Kit.Device d = currentDevice();
+                for (int i = 0; i < 200; i++)
+                {
+                    Dictionary<string, object> send = new Dictionary<string, object>();
+
+                    switch (b)
+                    {
+                        case BruteMode.boolTrue:
+                            send.Add(i.ToString(), true);
+                            break;
+                        case BruteMode.boolFalse:
+                            send.Add(i.ToString(), false);
+                            break;
+                        case BruteMode.randomNumber:
+                            send.Add(i.ToString(), rnd.Next(0, 100000));
+                            break;
+                    }
+
+                    AsyncContext.Run(() => d.Set(send));
+                }
+                this.Invoke(new MethodInvoker(updateEditor));
+                MessageBox.Show("Attempted to reveal all values!", "Success");
+            }).Start();
+        }
+
+        private void menuItem9_Click(object sender, EventArgs e)
+        {
+            dpsBrute(BruteMode.boolTrue);
+        }
+
+        private void menuItem10_Click(object sender, EventArgs e)
+        {
+            dpsBrute(BruteMode.boolFalse);
+        }
+
+        private void menuItem11_Click(object sender, EventArgs e)
+        {
+            dpsBrute(BruteMode.randomNumber);
         }
     }
 }
-

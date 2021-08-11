@@ -44,6 +44,13 @@ namespace Tuya_Home.Kit.Devices
             await Set(send);
         }
 
+        public async void SoftOff()
+        {
+            Dictionary<string, object> send = new Dictionary<string, object>();
+            send.Add("112", "0");
+            await Set(send);
+        }
+
         public async void CleanAuto()
         {
             Dictionary<string, object> send = new Dictionary<string, object>();
@@ -72,10 +79,24 @@ namespace Tuya_Home.Kit.Devices
             await Set(send);
         }
 
+        public async void CleanRandom()
+        {
+            Dictionary<string, object> send = new Dictionary<string, object>();
+            send.Add("102", "clean_random");
+            await Set(send);
+        }
+
         public async void GoHome()
         {
             Dictionary<string, object> send = new Dictionary<string, object>();
             send.Add("102", "find_sta");
+            await Set(send);
+        }
+
+        public async void FindDevice()
+        {
+            Dictionary<string, object> send = new Dictionary<string, object>();
+            send.Add("116", true);
             await Set(send);
         }
     }

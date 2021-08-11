@@ -34,6 +34,8 @@ namespace Tuya_Home
             this.mainMenu1 = new System.Windows.Forms.MainMenu(this.components);
             this.menuItem1 = new System.Windows.Forms.MenuItem();
             this.menuItem2 = new System.Windows.Forms.MenuItem();
+            this.menuItem3 = new System.Windows.Forms.MenuItem();
+            this.menuItem4 = new System.Windows.Forms.MenuItem();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
@@ -43,7 +45,11 @@ namespace Tuya_Home
             this.button6 = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
             this.editPanel = new System.Windows.Forms.Panel();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.ControlPanel = new System.Windows.Forms.Panel();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.button11 = new System.Windows.Forms.Button();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.button9 = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.ipBox = new System.Windows.Forms.TextBox();
@@ -62,16 +68,21 @@ namespace Tuya_Home
             this.button1 = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.selectedLabel = new System.Windows.Forms.Label();
-            this.ControlPanel = new System.Windows.Forms.Panel();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.menuItem5 = new System.Windows.Forms.MenuItem();
+            this.menuItem6 = new System.Windows.Forms.MenuItem();
+            this.menuItem7 = new System.Windows.Forms.MenuItem();
+            this.menuItem8 = new System.Windows.Forms.MenuItem();
+            this.menuItem9 = new System.Windows.Forms.MenuItem();
+            this.menuItem10 = new System.Windows.Forms.MenuItem();
+            this.menuItem11 = new System.Windows.Forms.MenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox4.SuspendLayout();
+            this.groupBox5.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.panel1.SuspendLayout();
-            this.groupBox5.SuspendLayout();
             this.SuspendLayout();
             // 
             // listView1
@@ -81,16 +92,18 @@ namespace Tuya_Home
             this.listView1.Location = new System.Drawing.Point(12, 12);
             this.listView1.MultiSelect = false;
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(546, 560);
+            this.listView1.Size = new System.Drawing.Size(546, 589);
             this.listView1.TabIndex = 0;
             this.listView1.TileSize = new System.Drawing.Size(128, 128);
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
+            this.listView1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listView1_KeyDown);
             // 
             // mainMenu1
             // 
             this.mainMenu1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-            this.menuItem1});
+            this.menuItem1,
+            this.menuItem3});
             // 
             // menuItem1
             // 
@@ -105,6 +118,22 @@ namespace Tuya_Home
             this.menuItem2.Text = "Exit";
             this.menuItem2.Click += new System.EventHandler(this.menuItem2_Click);
             // 
+            // menuItem3
+            // 
+            this.menuItem3.Index = 1;
+            this.menuItem3.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItem4,
+            this.menuItem6});
+            this.menuItem3.Text = "Current Device";
+            // 
+            // menuItem4
+            // 
+            this.menuItem4.Index = 0;
+            this.menuItem4.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItem5});
+            this.menuItem4.Text = "Bytes";
+            this.menuItem4.Click += new System.EventHandler(this.menuItem4_Click);
+            // 
             // pictureBox1
             // 
             this.pictureBox1.Image = global::Tuya_Home.Properties.Resources.tuya;
@@ -118,7 +147,7 @@ namespace Tuya_Home
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 575);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 604);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(982, 22);
             this.statusStrip1.TabIndex = 2;
@@ -140,7 +169,7 @@ namespace Tuya_Home
             this.groupBox1.Controls.Add(this.pictureBox1);
             this.groupBox1.Location = new System.Drawing.Point(564, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(406, 560);
+            this.groupBox1.Size = new System.Drawing.Size(406, 589);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Manage";
@@ -153,14 +182,14 @@ namespace Tuya_Home
             this.groupBox4.Controls.Add(this.editPanel);
             this.groupBox4.Location = new System.Drawing.Point(6, 221);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(177, 333);
+            this.groupBox4.Size = new System.Drawing.Size(177, 362);
             this.groupBox4.TabIndex = 7;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Parameter Editor";
             // 
             // button10
             // 
-            this.button10.Location = new System.Drawing.Point(7, 299);
+            this.button10.Location = new System.Drawing.Point(7, 333);
             this.button10.Name = "button10";
             this.button10.Size = new System.Drawing.Size(164, 23);
             this.button10.TabIndex = 3;
@@ -170,7 +199,7 @@ namespace Tuya_Home
             // 
             // button6
             // 
-            this.button6.Location = new System.Drawing.Point(96, 270);
+            this.button6.Location = new System.Drawing.Point(102, 304);
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(75, 23);
             this.button6.TabIndex = 2;
@@ -180,7 +209,7 @@ namespace Tuya_Home
             // 
             // button5
             // 
-            this.button5.Location = new System.Drawing.Point(7, 270);
+            this.button5.Location = new System.Drawing.Point(6, 304);
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(75, 23);
             this.button5.TabIndex = 1;
@@ -193,11 +222,31 @@ namespace Tuya_Home
             this.editPanel.AutoScroll = true;
             this.editPanel.Location = new System.Drawing.Point(6, 15);
             this.editPanel.Name = "editPanel";
-            this.editPanel.Size = new System.Drawing.Size(165, 249);
+            this.editPanel.Size = new System.Drawing.Size(165, 283);
             this.editPanel.TabIndex = 0;
+            // 
+            // groupBox5
+            // 
+            this.groupBox5.Controls.Add(this.ControlPanel);
+            this.groupBox5.Location = new System.Drawing.Point(189, 338);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(211, 239);
+            this.groupBox5.TabIndex = 4;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Device Control";
+            // 
+            // ControlPanel
+            // 
+            this.ControlPanel.AutoScroll = true;
+            this.ControlPanel.Location = new System.Drawing.Point(6, 19);
+            this.ControlPanel.Name = "ControlPanel";
+            this.ControlPanel.Size = new System.Drawing.Size(199, 214);
+            this.ControlPanel.TabIndex = 8;
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.button11);
+            this.groupBox3.Controls.Add(this.comboBox1);
             this.groupBox3.Controls.Add(this.button9);
             this.groupBox3.Controls.Add(this.label1);
             this.groupBox3.Controls.Add(this.ipBox);
@@ -210,16 +259,35 @@ namespace Tuya_Home
             this.groupBox3.Controls.Add(this.devIdBox);
             this.groupBox3.Location = new System.Drawing.Point(189, 105);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(211, 204);
+            this.groupBox3.Size = new System.Drawing.Size(211, 227);
             this.groupBox3.TabIndex = 6;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Information";
             // 
+            // button11
+            // 
+            this.button11.Location = new System.Drawing.Point(152, 200);
+            this.button11.Name = "button11";
+            this.button11.Size = new System.Drawing.Size(53, 21);
+            this.button11.TabIndex = 17;
+            this.button11.Text = "Send";
+            this.button11.UseVisualStyleBackColor = true;
+            this.button11.Click += new System.EventHandler(this.button11_Click);
+            // 
+            // comboBox1
+            // 
+            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Location = new System.Drawing.Point(6, 200);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(140, 21);
+            this.comboBox1.TabIndex = 16;
+            // 
             // button9
             // 
-            this.button9.Location = new System.Drawing.Point(140, 151);
+            this.button9.Location = new System.Drawing.Point(152, 151);
             this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(65, 20);
+            this.button9.Size = new System.Drawing.Size(53, 20);
             this.button9.TabIndex = 14;
             this.button9.Text = "Set";
             this.button9.UseVisualStyleBackColor = true;
@@ -238,7 +306,7 @@ namespace Tuya_Home
             // 
             this.ipBox.Location = new System.Drawing.Point(6, 151);
             this.ipBox.Name = "ipBox";
-            this.ipBox.Size = new System.Drawing.Size(128, 20);
+            this.ipBox.Size = new System.Drawing.Size(140, 20);
             this.ipBox.TabIndex = 14;
             // 
             // button4
@@ -386,29 +454,59 @@ namespace Tuya_Home
             this.selectedLabel.Text = "Nothing Selected";
             this.selectedLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // ControlPanel
+            // menuItem5
             // 
-            this.ControlPanel.AutoScroll = true;
-            this.ControlPanel.Location = new System.Drawing.Point(6, 19);
-            this.ControlPanel.Name = "ControlPanel";
-            this.ControlPanel.Size = new System.Drawing.Size(199, 214);
-            this.ControlPanel.TabIndex = 8;
+            this.menuItem5.Index = 0;
+            this.menuItem5.Text = "Decode Bytes (Payload only)";
+            this.menuItem5.Click += new System.EventHandler(this.menuItem5_Click);
             // 
-            // groupBox5
+            // menuItem6
             // 
-            this.groupBox5.Controls.Add(this.ControlPanel);
-            this.groupBox5.Location = new System.Drawing.Point(189, 315);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(211, 239);
-            this.groupBox5.TabIndex = 4;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "Device Control";
+            this.menuItem6.Index = 1;
+            this.menuItem6.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItem7,
+            this.menuItem8});
+            this.menuItem6.Text = "DPS";
+            // 
+            // menuItem7
+            // 
+            this.menuItem7.Index = 0;
+            this.menuItem7.Text = "Set";
+            this.menuItem7.Click += new System.EventHandler(this.menuItem7_Click);
+            // 
+            // menuItem8
+            // 
+            this.menuItem8.Index = 1;
+            this.menuItem8.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItem9,
+            this.menuItem10,
+            this.menuItem11});
+            this.menuItem8.Text = "Brute (0-200)";
+            this.menuItem8.Click += new System.EventHandler(this.menuItem8_Click);
+            // 
+            // menuItem9
+            // 
+            this.menuItem9.Index = 0;
+            this.menuItem9.Text = "bool true";
+            this.menuItem9.Click += new System.EventHandler(this.menuItem9_Click);
+            // 
+            // menuItem10
+            // 
+            this.menuItem10.Index = 1;
+            this.menuItem10.Text = "bool false";
+            this.menuItem10.Click += new System.EventHandler(this.menuItem10_Click);
+            // 
+            // menuItem11
+            // 
+            this.menuItem11.Index = 2;
+            this.menuItem11.Text = "random number";
+            this.menuItem11.Click += new System.EventHandler(this.menuItem11_Click);
             // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(982, 597);
+            this.ClientSize = new System.Drawing.Size(982, 626);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.listView1);
@@ -418,17 +516,18 @@ namespace Tuya_Home
             this.Name = "Main";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Tuya Home";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Main_FormClosed);
             this.Load += new System.EventHandler(this.Main_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);
+            this.groupBox5.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
-            this.groupBox5.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -470,5 +569,16 @@ namespace Tuya_Home
         private System.Windows.Forms.Button button10;
         private System.Windows.Forms.Panel ControlPanel;
         private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.Button button11;
+        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.MenuItem menuItem3;
+        private System.Windows.Forms.MenuItem menuItem4;
+        private System.Windows.Forms.MenuItem menuItem5;
+        private System.Windows.Forms.MenuItem menuItem6;
+        private System.Windows.Forms.MenuItem menuItem7;
+        private System.Windows.Forms.MenuItem menuItem8;
+        private System.Windows.Forms.MenuItem menuItem9;
+        private System.Windows.Forms.MenuItem menuItem10;
+        private System.Windows.Forms.MenuItem menuItem11;
     }
 }
