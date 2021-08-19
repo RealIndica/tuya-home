@@ -28,6 +28,8 @@ namespace Tuya_Home
         Kit.Device genericDevice;
         Kit.Devices.RoboHoover genericRoboHoover;
 
+        Thread movementControllerThread;
+
         bool loaded = false;
 
         [DllImport("user32.dll")]
@@ -175,6 +177,20 @@ namespace Tuya_Home
                     listView1.SelectedItems[0].Tag = genericDevice.getBase();
                     break;
             }
+
+            //Robot movement experiment
+            try
+            {
+                if (m == 2)
+                {
+                    movementControllerThread.Start();
+                }
+                else
+                {
+                    movementControllerThread.Abort();
+                }
+            }
+            catch { }
         }
 
         private void updateDeviceControls()
@@ -212,7 +228,7 @@ namespace Tuya_Home
             loadCommands();
             if (!Debugger.IsAttached)
             {
-                new Thread(() => { loadDevices(); loadIPs(); manageButtonInteractivity(true); movementController(); }).Start();
+                new Thread(() => { loadDevices(); loadIPs(); manageButtonInteractivity(true); }).Start();
             }
             else
             {
@@ -220,6 +236,8 @@ namespace Tuya_Home
                 loadIPs();
                 manageButtonInteractivity(true);
             }
+
+            movementControllerThread = new Thread(() => { movementController(); });
         }
 
         private void menuItem2_Click(object sender, EventArgs e)
@@ -668,27 +686,29 @@ namespace Tuya_Home
         {
             Random rnd = new Random();
             new Thread(() => {
-
-                Kit.Device d = currentDevice();
-                for (int i = 0; i < 200; i++)
+                try
                 {
-                    Dictionary<string, object> send = new Dictionary<string, object>();
-
-                    switch (b)
+                    Kit.Device d = currentDevice();
+                    for (int i = 0; i < 200; i++)
                     {
-                        case BruteMode.boolTrue:
-                            send.Add(i.ToString(), true);
-                            break;
-                        case BruteMode.boolFalse:
-                            send.Add(i.ToString(), false);
-                            break;
-                        case BruteMode.randomNumber:
-                            send.Add(i.ToString(), rnd.Next(0, 100000));
-                            break;
-                    }
+                        Dictionary<string, object> send = new Dictionary<string, object>();
 
-                    AsyncContext.Run(() => d.Set(send));
-                }
+                        switch (b)
+                        {
+                            case BruteMode.boolTrue:
+                                send.Add(i.ToString(), true);
+                                break;
+                            case BruteMode.boolFalse:
+                                send.Add(i.ToString(), false);
+                                break;
+                            case BruteMode.randomNumber:
+                                send.Add(i.ToString(), rnd.Next(0, 100000));
+                                break;
+                        }
+
+                        AsyncContext.Run(() => d.Set(send));
+                    }
+                } catch (Exception e) { Console.WriteLine(e.Message); }
                 this.Invoke(new MethodInvoker(updateEditor));
                 MessageBox.Show("Attempted to reveal all values!", "Success");
             }).Start();

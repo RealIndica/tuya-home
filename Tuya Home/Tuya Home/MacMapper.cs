@@ -29,28 +29,38 @@ namespace Tuya_Home
             return process.StandardOutput;
         }
 
-        private static string GetLocalIPAddress()
+        private static string[] GetLocalIPAddresses()
         {
+            List<string> ret = new List<string>();
             var host = Dns.GetHostEntry(Dns.GetHostName());
             foreach (var ip in host.AddressList)
             {
                 if (ip.AddressFamily == AddressFamily.InterNetwork)
                 {
-                    return ip.ToString();
+                    ret.Add(ip.ToString());
                 }
             }
-            throw new Exception("No network adapters with an IPv4 address in the system!");
+            if (ret.Count > 0)
+            {
+                return ret.ToArray();
+            } else
+            {
+                throw new Exception("No network adapters with an IPv4 address in the system!");
+            }
         }
 
         private static void initArpTable()
         {
             if (!initArp)
             {
-                string ip = GetLocalIPAddress();
-                int idx = ip.LastIndexOf('.');
-                string formatted = ip.Substring(0, idx);
-                var initStream = ExecuteCommandLine(Environment.CurrentDirectory + "//bin//arpPopulate.bat", formatted);
-                System.Threading.Thread.Sleep(2000);
+                string[] ips = GetLocalIPAddresses();
+                foreach (string ip in ips)
+                { 
+                    int idx = ip.LastIndexOf('.');
+                    string formatted = ip.Substring(0, idx);
+                    var initStream = ExecuteCommandLine(Environment.CurrentDirectory + "//bin//arpPopulate.bat", formatted);
+                }
+                System.Threading.Thread.Sleep(5000);
                 initArp = true;
             }
         }

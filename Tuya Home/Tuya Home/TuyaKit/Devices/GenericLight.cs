@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Tuya_Home.Kit.Devices
 {
@@ -9,6 +10,19 @@ namespace Tuya_Home.Kit.Devices
 	[Serializable]
 	public class GenericLight : Device
 	{
+		public void setColourForm()
+        {
+			System.Windows.Forms.ColorDialog colorDialog = new System.Windows.Forms.ColorDialog();
+			colorDialog.AllowFullOpen = true;
+			colorDialog.AnyColor = true;
+			colorDialog.SolidColorOnly = false;
+
+			if (colorDialog.ShowDialog() == DialogResult.OK)
+            {
+				setColour(colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B);
+            }
+        }
+
 		public async void setColour(int R, int G, int B)
 		{
 			Dictionary<string, object> response;
@@ -29,12 +43,6 @@ namespace Tuya_Home.Kit.Devices
 					   ["1"] = true,
 					   ["2"] = "colour",
 					   ["5"] = R.ToString("X2").ToLower() + G.ToString("X2").ToLower() + B.ToString("X2").ToLower() + "0000ffff",
-					   ["6"] = "00ff0000000000",
-					   ["7"] = "ffff500100ff00",
-					   ["8"] = "ffff8003ff000000ff000000ff000000000000000000",
-					   ["9"] = "ffff5001ff0000",
-					   ["10"] = "ffff0505ff000000ff00ffff00ff00ff0000ff000000",
-					   ["11"] = ""
 				   });
 			}
 
