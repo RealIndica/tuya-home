@@ -1,5 +1,5 @@
 # tuya-home
-An experimental program to manage tuya devices on your local network without the cloud.
+An experimental program written in C# to manage Tuya devices on your local network without the cloud.
 
 # Supported Protocols
 - Tuya 3.1 protocol 
