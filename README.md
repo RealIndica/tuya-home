@@ -15,6 +15,10 @@ An experimental program written in C# to manage Tuya devices on your local netwo
 - Brute force hidden DPS inputs
 - Automatic icon downloading from Tuya server
 
+# Requirements
+- Windows x64
+- Node JS
+
 # To do
 - Add support for Tuya 3.4 protocol
 - Cleanup UI
