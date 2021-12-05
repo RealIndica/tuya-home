@@ -24,3 +24,4 @@ An experimental program written in C# to manage Tuya devices on your local netwo
 - Cleanup UI
 - Develop dynamic link library for creation of custom devices without the need to recompile the program
 - Re-write some source due to the shoddy method of handling different devices
+- Remove requirement for node JS by re-writing tuya cli in pure C#
