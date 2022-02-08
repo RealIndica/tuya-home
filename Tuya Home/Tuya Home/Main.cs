@@ -415,7 +415,7 @@ namespace Tuya_Home
                 Kit.Device curdev = new Kit.Device
                 {
                     IP = device.ip,
-                    protocolVersion = "3.3",
+                    protocolVersion = device.protocol_version,
                     localKey = device.localKey,
                     devId = device.virtualID
                 };
@@ -433,7 +433,7 @@ namespace Tuya_Home
                 Kit.Device curdev = new Kit.Device
                 {
                     IP = device.ip,
-                    protocolVersion = "3.3",
+                    protocolVersion = device.protocol_version,
                     localKey = device.localKey,
                     devId = device.virtualID
                 };

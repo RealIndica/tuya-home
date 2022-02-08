@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "3db4a5ea-547a-4e12-bf07-193d685194a9": {
+      "ProjectGuid": "3db4a5ea-547a-4e12-bf07-193d685194a9",
+      "DisplayName": "Tuya Home",
+      "ColorIndex": 0
+    }
+  },
+  "NextColorIndex": 1
+}

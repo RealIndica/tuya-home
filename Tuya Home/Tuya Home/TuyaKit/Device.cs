@@ -171,6 +171,11 @@ namespace Tuya_Home.Kit
             return (Device)this;
         }
 
+        public string getVersion()
+        {
+            return "3.3";
+        }
+
         public void addEditorItem(string value, int y, Panel editPanel, MethodInfo method, object inst)
         {
             Button btn = new Button();

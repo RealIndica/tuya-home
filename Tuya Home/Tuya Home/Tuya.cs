@@ -28,6 +28,7 @@ namespace Tuya_Home
             public string icon { get; set; }
             public string mac { get; set; }
             public string ip { get; set; }
+            public string protocol_version { get; set; }
         }
     }
 }

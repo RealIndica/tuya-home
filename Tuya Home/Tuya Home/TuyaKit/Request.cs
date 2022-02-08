@@ -62,8 +62,15 @@ namespace Tuya_Home.Kit
             { return null; }
 
             // Parse.
-            string responseJSONString = DataStringFromPacket(responsePacketBytes, device);
-            Log.Format("responseJSONString: `{0}`", responseJSONString);
+            string responseJSONString = string.Empty;
+            try
+            {
+                responseJSONString = DataStringFromPacket(responsePacketBytes, device);
+                Log.Format("responseJSONString: `{0}`", responseJSONString);
+            } catch (Exception e)
+            {
+                Log.Format("Exception in formatting data: {0}", e.Message);
+            }
 
             // Only if any.
             if (responseJSONString == string.Empty || responseJSONString.Length <= 1)
